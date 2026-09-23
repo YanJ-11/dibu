@@ -1,0 +1,232 @@
+/* 《递补》首段审阅原型。所有页面、人员、文件与联络均为本地虚构内容。 */
+(() => {
+  'use strict';
+  const KEY = 'dibu-preview-v21-1';
+  const $ = (selector) => document.querySelector(selector);
+  const escape = (value = '') => String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const defaultState = {
+    entered:false, openingClosed:false, activeApp:'browser', step:0,
+    form:{rank:'',program:'',camp:'',file:'',ack:false}, submitted:false, error:'',
+    note:'9月22日\n\n', checklist:{info:false,proof:false,july:false,notice:false}, memoEggSeen:false,
+    selectedMail:'invitation', readMails:['invitation'], folder:'application', savedFiles:[],
+    tabs:[{history:['form'],index:0}], activeTab:0, transcriptOpen:false, recoveryAnswer:'',savedAnswer:false
+  };
+  let state;
+  try { const loaded = JSON.parse(localStorage.getItem(KEY) || 'null'); state = loaded ? {...defaultState,...loaded,form:{...defaultState.form,...loaded.form},checklist:{...defaultState.checklist,...loaded.checklist}} : structuredClone(defaultState); }
+  catch { state = JSON.parse(JSON.stringify(defaultState)); }
+  // The old default text is migrated only when it is unchanged. Player notes are never rewritten.
+  const oldDefaultNote='9月22日\n\n□ 确认申请信息\n□ 补交成绩及排名证明\n□ 核对七月营期记录\n□ 查看后续通知\n';
+  if(state.note===oldDefaultNote)state.note=defaultState.note;
+  let toastTimer, activeDocument;
+  function releaseDocument(){if(activeDocument?.temporary)URL.revokeObjectURL(activeDocument.pdf);activeDocument=null;}
+  const checklistItems=[['info','确认申请信息'],['proof','补交成绩及排名证明'],['july','核对七月营期记录'],['notice','查看后续通知']];
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch{toast('浏览器未允许本地保存，请保持此页面打开。');}}
+  const iconPaths = {
+    browser:'<circle cx="12" cy="12" r="9" fill="#1c94d4"/><path d="M3 13c5-7 12-9 17-4-1-6-10-9-15-3-2 2-3 5-2 7" fill="#62c1d3"/><path d="M4 14c3 6 12 9 17 1-6 4-11 1-11-3-3 0-5 1-6 2" fill="#1178ba"/>',
+    folder:'<path d="M2 6a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v11H2z" fill="#e3b557"/><path d="M2 9h20v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z" fill="#f2cc72"/>',
+    mail:'<rect x="2" y="4" width="20" height="16" rx="2" fill="#398dca"/><path d="m3 5 9 8 9-8" fill="none" stroke="#dceffd" stroke-width="1.5"/><path d="m3 19 7-7m11 7-7-7" stroke="#ffffff55" fill="none"/>',
+    chat:'<path d="M15 3C8 0 1 4 1 10c0 3 2 5 4 6l-1 4 5-3h2c-1-5 2-8 7-9 0-2-1-4-3-5" fill="#29b65d"/><path d="M22 14c0-4-4-6-7-6s-7 2-7 6 3 6 7 6h2l4 3-1-4c1-1 2-3 2-5" fill="#39c771"/><circle cx="7" cy="8" r="1" fill="#fff"/><circle cx="12" cy="8" r="1" fill="#fff"/><circle cx="13" cy="13" r="1" fill="#fff"/><circle cx="18" cy="13" r="1" fill="#fff"/>',
+    note:'<path d="M5 2h15v20H5z" fill="#effaff" stroke="#479bc7"/><path d="M8 7h9M8 11h9M8 15h9M8 19h6" stroke="#75adcb"/><path d="M3 5h4M3 9h4M3 13h4M3 17h4" stroke="#4e7b9c" stroke-width="2"/>',
+    document:'<path d="M5 2h10l5 5v15H5z" fill="#fff" stroke="#b6c8d5"/><path d="M15 2v6h5M8 12h9M8 16h9" fill="none" stroke="#9fb4c4"/><path d="M8 19h6" stroke="#c0cdd8"/>',
+    recorder:'<rect x="5" y="2" width="14" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="8" y="5" width="8" height="4" rx="1" fill="currentColor" opacity=".3"/><circle cx="12" cy="14" r="2.7" fill="none" stroke="currentColor"/><path d="M8 19h8" stroke="currentColor"/>',
+    windows:'<path fill="#4286b4" d="M2 3h9v9H2zm11 0h9v9h-9zM2 14h9v9H2zm11 0h9v9h-9z"/>'
+  };
+  function icon(name,cls=''){return `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${iconPaths[name]||iconPaths.document}</svg>`;}
+  function crest(){return '<svg class="crest" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="32" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="36" cy="36" r="26" fill="none" stroke="currentColor" stroke-width=".8"/><path d="M19 39h34M24 34l12-9 12 9M27 35v14m9-14v14m9-14v14M22 49h28" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 43q2 13 15 16m25-16q-2 13-15 16" fill="none" stroke="currentColor"/><text x="36" y="19" text-anchor="middle" font-size="7" fill="currentColor" font-family="serif">HENGCHUAN</text><text x="36" y="60" text-anchor="middle" font-size="6" fill="currentColor" font-family="serif">1958</text></svg>';}
+  const files = {
+  "application": [
+    {
+      "id": "resume",
+      "name": "陈言_个人简历.pdf",
+      "date": "2026/09/18 16:42"
+    },
+    {
+      "id": "grade-draft",
+      "name": "成绩及排名证明_自助导出.pdf",
+      "date": "2026/09/18 10:06"
+    },
+    {
+      "id": "grade-certified",
+      "name": "成绩及排名证明_教务盖章.pdf",
+      "date": "2026/09/19 14:28"
+    },
+    {
+      "id": "statement",
+      "name": "个人陈述.pdf",
+      "date": "2026/09/18 17:12"
+    },
+    {
+      "id": "application-log",
+      "name": "申请记录.pdf",
+      "date": "2026/09/22 08:10"
+    }
+  ],
+  "july": [
+    {
+      "id": "ticket",
+      "name": "往返行程单.pdf",
+      "date": "2026/07/13 21:14"
+    },
+    {
+      "id": "camp-photo",
+      "name": "研究院北楼_报到日.jpg",
+      "date": "2026/07/11 09:32",
+      "photo": true,
+      "size": "示意照片",
+      "text": "照片备注：报到当天，研究院北楼。\n保存日期：2026年7月11日。\n\n建筑门口挂着夏令营报到处的指示牌。"
+    },
+    {
+      "id": "camp-receipt",
+      "name": "营期活动确认回执.pdf",
+      "date": "2026/07/13 16:40"
+    },
+    {
+      "id": "july-note",
+      "name": "七月旧笔记.pdf",
+      "date": "2026/07/13 20:36"
+    },
+    {
+      "id": "july-summary",
+      "name": "营期活动摘要_个人留存.pdf",
+      "date": "2026/07/14 10:12"
+    }
+  ]
+};
+  for(const group of Object.values(files))for(const file of group){
+    const asset=window.DIBU_DOCUMENTS[file.id];
+    if(asset){Object.assign(file,asset);file.name=file.name.replace(/\.txt$/i,'.pdf');}
+  }
+  const steps=['申请须知','基本信息','家庭主要成员','学习信息','外语水平','计算机水平','学习和工作经历','学术成果','奖励或处分（本科期间）','申请信息','上传照片','上传材料','申请信息提交'];
+  const labels={home:'衡川大学先进系统研究院',form:'填写或修改申请信息',dashboard:'研究生报考服务系统',departments:'申请院系开放查询',notice:'补充考核材料确认通知',status:'申请状态查询',result:'申请结果查询',rank:'候补进度查询',followup:'补充考核情况核对',login:'研究生报考服务系统',blank:'新标签页'};
+  const paths={home:'https://admission.hcu.example/2027',form:'https://xspt.hcu.example/sstm/tm/application',dashboard:'https://xspt.hcu.example/sstm/tm/index',departments:'https://xspt.hcu.example/sstm/tm/opening',notice:'https://admission.hcu.example/2027/notices/0922',status:'https://xspt.hcu.example/sstm/tm/status',result:'https://xspt.hcu.example/sstm/tm/result',rank:'https://xspt.hcu.example/sstm/tm/waitlist',followup:'https://xspt.hcu.example/sstm/tm/revisit/0922',login:'https://xspt.hcu.example/logon',blank:''};
+  function currentTab(){return state.tabs[state.activeTab]||state.tabs[0];}
+  function currentRoute(){const tab=currentTab();return tab.history[tab.index];}
+  function go(route){const tab=currentTab();if(currentRoute()!==route){tab.history=tab.history.slice(0,tab.index+1);tab.history.push(route);tab.index=tab.history.length-1;}state.activeApp='browser';state.error='';save();render();}
+  function toast(msg){const el=$('#toast');el.className='toast';el.textContent=msg;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{el.className='';el.textContent='';},3300);}
+  function modal(content,extra='',label='资料详情'){releaseDocument();const root=$('#dialog-root');root.innerHTML=`<div class="dialog-backdrop"><section class="dialog ${extra}" role="dialog" aria-modal="true" aria-label="${label}"><button class="dialog-close" data-action="close-dialog" aria-label="关闭">×</button>${content}</section></div>`;root.querySelector('button')?.focus();}
+  function closeDialog(){ releaseDocument();$('#dialog-root').innerHTML=''; if(!state.openingClosed){state.openingClosed=true;save();} }
+  function opening(){modal(`<div class="opening-copy"><p>你叫陈言，是一名自动化相关专业的大四学生。</p><p>你已经取得本校的推免资格，却还没有确定接收你的学校。投递过的材料、等过的回复，最后都没有变成一个明确的去向。</p><p>七月，你参加过衡川大学先进系统研究院的夏令营。你记得报到、参观，也记得最后一天参加了一个叫“状态恢复观察”的项目。只有结束前约四十分钟的事情，你一直记不清。你以为那天太累，睡着了一会儿。</p><p>夏令营之后，你一直没有等到明确的接收通知。</p><p>2026年9月22日，一封补充考核邮件到了。邮件提醒你，进入申请人工作台，确认材料并查看后续安排。</p><p>你点开了邮件里的链接。</p></div>`,'opening-dialog','背景');}
+  function home(){return `<div class="site-home"><header class="institute-head">${crest()}<div><div class="university">衡川大学</div><div class="institute-name">先进系统研究院</div></div></header><nav class="home-nav" aria-label="栏目"><div><span>研究院首页</span><span>院情介绍</span><span>师资队伍</span><span>科学研究</span><span>研究生招生</span><span>联系我们</span></div></nav><section class="home-main"><div class="home-eyebrow">GRADUATE ADMISSIONS · 2027</div><h1>2027 年研究生招生</h1><p class="home-lead">补充考核与候补进度查询</p><div class="home-callout"><div><strong>关于开展2027年研究生招生补充考核材料确认工作的通知</strong><p>请已收到邮件的申请人登录工作台，核对材料并查看后续安排。</p></div><button class="primary" data-action="enter">进入申请人工作台</button></div><section class="announcements"><h2>通知公告</h2><div class="announcement"><span>先进系统研究院2027年研究生招生补充考核材料确认工作安排</span><time>2026-09-22</time></div><div class="announcement"><span>2027 年接收推荐免试研究生有关事项说明</span><time>2026-09-08</time></div><div class="announcement"><span>2027 级推免招生夏令营活动通知</span><time>2026-06-10</time></div></section></section><footer class="home-footer">衡川大学先进系统研究院<br>研究生招生工作办公室 · 2027级</footer></div>`;}
+  function masthead(){return `<header class="site-head">${crest()}<div><div class="university">衡川大学</div><div class="english">Hengchuan University</div></div><div class="mast-title">研究生报考服务系统</div></header>`;}
+  function shell(content,login=false){return `${!login?'<div class="utility-bar"><span>你好，陈言！</span><button data-action="route" data-route="dashboard">返回首页</button><span class="sep">|</span><button data-action="account">账户信息</button><span class="sep">|</span><button data-action="route" data-route="login">登出</button></div>':''}${masthead()}${!login?'<div class="system-banner"><h1>2027年全国优秀大学生推免生预报名</h1></div>':''}${content}<footer class="system-footer">衡川大学研究生院 · 先进系统研究院招生办公室</footer>`;}
+  function crumb(text,completion=false){const complete=completeCount();return `<div class="breadcrumbs"><span aria-hidden="true">⌂</span><button data-action="route" data-route="dashboard">首页</button><span>»</span><span>${text}</span>${completion?`<span class="completion">已完成${complete}步</span><span>（共13步）</span>`:''}</div>`;}
+  function stepDone(i){if(i===3)return state.form.rank.trim()!=='';if(i===9)return !!state.form.program&&!!state.form.camp.trim();if(i===11)return !!state.form.file;if(i===12)return state.submitted;return true;}
+  function completeCount(){return steps.filter((_,i)=>stepDone(i)).length;}
+  function row(label,value,help='',required=false){return `<div class="form-row"><div class="form-label">${label}${required?'<span class="required">*</span>':''}</div><div>${value}</div><div class="field-help">${help}</div></div>`;}
+  function field(label,id,value,help='',readonly=false){return `<div class="form-row"><label for="${id}">${label}${readonly?'':'<span class="required">*</span>'}</label><input id="${id}" ${readonly?'readonly':'data-field="'+id+'"'} value="${escape(value)}" ${state.submitted&&!readonly?'readonly':''} autocomplete="off"><div class="field-help">${help}</div></div>`;}
+  function formContent(){const f=state.form;switch(state.step){
+    case 0:return `<h2>申请须知</h2><div class="form-text"><p>有意申请考生请查询接收学院通知，并按接收学院要求完成报名。</p><p>本次为已参加夏令营考生的补充材料确认。七月已登记的信息已导入，请重点核对学习信息、申请信息及上传材料。</p></div><div class="info-note">需补充：专业排名比例、申请方向、营期批次及盖章成绩证明。<br>材料要求与方向代码见 <button class="text" data-action="route" data-route="notice">《2027级推免补充考核材料确认通知》</button>。<br>营期批次请以本人留存的确认回执为准。</div><div class="subtle-note">申请材料位于电脑的“文件”中。<button class="text" data-action="files-folder" data-folder="application">打开申请材料文件夹</button><br>七月已有的材料无需重新办理，可使用本人留存文件核对。</div>`;
+    case 1:return `<h2>基本信息</h2>${row('报名号','HC2026-0922-071')}${field('姓名','readonly-name','陈言','字库中没有的汉字用大写汉语拼音字母代替，中间无空格',true)}${field('姓名拼音','readonly-pinyin','ChenYan','按紧左原则，字母间不加任何字符',true)}${row('证件类型','居民身份证')}${row('证件号码','******************','已核验；本页不展示完整号码')}${row('出生日期','2005年','已从营期信息导入')}${row('性别','未公开')}${row('在校身份','本科在读')}${row('联系邮箱','chenyan@letter.example','已验证')}`;
+    case 2:return `<h2>家庭主要成员</h2><div class="info-note">沿用七月已确认资料，本次无需补充家庭成员信息。</div>${row('家庭成员资料','已登记','仅本人及授权审核人员可查阅')}${row('紧急联系方式','已核验','本次材料确认不要求重新填写')}`;
+    case 3:return `<h2>学习信息</h2><div class="info-note">请依据完整成绩及排名证明，填写专业排名比例。<br>比例计算方式：本人名次 ÷ 参与排名人数 × 100%。结果保留两位小数。</div>${row('本科院校','岚江工业大学')}${row('本科院系','自动化学院')}${row('本科专业','自动化')}${row('预计毕业年份','2027年')}${row('推免资格','已取得本校推荐资格')}${field('专业排名比例（%）','rank',f.rank,'填写百分数数值，不含“%”。例如 10.00。')}${row('核对材料','<button class="text" data-action="files-folder" data-folder="application">查看本地成绩及排名证明</button>','请核对名次及参与排名人数')}`;
+    case 4:return `<h2>外语水平</h2>${row('语种','英语')}${row('考试类型','大学英语六级')}${row('成绩','568')}${row('证明材料','已核验','沿用七月提交记录')}`;
+    case 5:return `<h2>计算机水平</h2>${row('编程语言','Python、C')}${row('说明','已完成本科相关课程')}${row('资料状态','已确认','本项无需补充')}`;
+    case 6:return `<h2>学习和工作经历</h2>${row('起止时间','2023年09月 — 至今')}${row('学习经历','自动化专业本科在读')}${row('工作经历','无')}`;
+    case 7:return `<h2>学术成果</h2>${row('公开发表论文','无')}${row('课程项目','移动平台轨迹跟踪')}${row('本人分工','数据整理与模型验证')}${row('成果材料','已上传项目说明','沿用夏令营申请材料')}`;
+    case 8:return `<h2>奖励或处分（本科期间）</h2>${row('奖励记录','校级优秀学生奖学金')}${row('处分记录','无')}${row('材料状态','已核验')}`;
+    case 9:return `<h2>申请信息</h2><div class="info-note">请按照本轮补充考核通知选择申请方向。营期批次可在七月活动确认回执中查找。<br><button class="text" data-action="route" data-route="notice">查看补充考核通知</button>　<button class="text" data-action="files-folder" data-folder="july">打开七月夏令营文件夹</button></div>${row('申请院系','先进系统研究院')}${row('招生年份','2027年')}${row('申请类型','推免生预报名')}${row('申请方向',`<select id="program" aria-label="申请方向" data-field="program" ${state.submitted?'disabled':''}><option value="">请选择申请方向</option><option value="0811/H01" ${f.program==='0811/H01'?'selected':''}>0811 / H01 · 智能控制</option><option value="0811/H03" ${f.program==='0811/H03'?'selected':''}>0811 / H03 · 复杂系统与人机交互</option><option value="0854/H02" ${f.program==='0854/H02'?'selected':''}>0854 / H02 · 电子信息</option></select>`,'以9月22日通知的开放方向为准',true)}${field('营期批次','camp',f.camp,'请按本人营期活动确认回执填写，保留连接符。')}${row('申请导师','考核后确认','本轮无需提前选择')}`;
+    case 10:return `<h2>上传照片</h2><div class="info-note">已核验营期登记照片，无需重复上传。</div><div style="width:112px;height:145px;background:#e9f0f5;border:1px solid #dce5ed;display:flex;align-items:center;justify-content:center;color:#a0b2c0;font-size:36px;margin:25px">陈</div>${row('照片状态','已通过格式审核')}`;
+    case 11:return `<h2>上传材料</h2><div class="info-note">请提交含成绩页、排名页及教务审核印章的完整证明。自助导出文件不能替代审核盖章版本。</div>${row('个人简历','陈言_个人简历.pdf','已登记')}${row('个人陈述','个人陈述.pdf','已更新至9月版本')}${row('成绩及排名证明',f.file?`<span>${escape(findFile(f.file)?.name||'')}</span><br><button class="text small" data-action="picker" ${state.submitted?'disabled':''}>重新选择</button>`:`<button class="secondary" data-action="picker">选择本地材料</button>`,'从陈言已整理的申请材料中选择',true)}<p class="small muted" style="line-height:1.9">已选附件会随最终提交一并交给招生办公室审核。<br>选择材料后仍可返回检查，不会立刻提交申请。</p>`;
+    case 12:return `<h2>申请信息提交</h2>${state.submitted?'<div class="inline-success">申请材料已提交。请查看站内回执及邮箱中的后续安排。</div>':'<div class="info-note">请最后核对以下信息。保存只保留草稿；正式提交后，材料进入本轮审核。</div>'}<ul class="review-list"><li><span>申请人</span><strong>陈言 / HC2026-0922-071</strong></li><li><span>专业排名比例</span><strong>${f.rank?escape(f.rank)+'%':'待填写'}</strong></li><li><span>申请方向</span><strong>${escape(f.program)||'待选择'}</strong></li><li><span>营期批次</span><strong>${escape(f.camp)||'待填写'}</strong></li><li><span>成绩及排名证明</span><strong>${escape(findFile(f.file)?.name||'待选择')}</strong></li></ul>${!state.submitted?`<label class="check-line" style="margin-top:23px"><input type="checkbox" data-field="ack" ${f.ack?'checked':''}>我已核对本人申请信息，所选附件为用于本轮审核的完整版本。</label>`:'<p class="small muted">提交时间：2026年9月22日 09:18<br>回执编号：RC-0922-071</p>'}${state.error?`<div class="inline-error" role="alert">${escape(state.error).replace(/\n/g,'<br>')}</div>`:''}`;
+    default:return '';
+  }}
+  function formPage(){return shell(`<div class="work-area"><aside class="steps" aria-label="申请步骤">${steps.map((name,i)=>`<button class="step ${i===state.step?'active':''}" data-action="step" data-step="${i}" ${i===state.step?'aria-current="step"':''}><span>${name}</span><span class="${stepDone(i)?'done':'todo'}" aria-label="${stepDone(i)?'已填写':'待填写'}">${stepDone(i)?'✓':'·'}</span></button>`).join('')}<div class="form-status">报名状态：<b class="${state.submitted?'ok':''}">${state.submitted?'已提交':'未提交'}</b></div></aside><section class="form-pane">${crumb('填写/修改申请信息',true)}${formContent()}<div class="form-actions">${state.step>0?'<button class="secondary" data-action="prev-step">上一步</button>':''}${state.step<12?'<button class="secondary" data-action="save-form">保存</button><button class="primary" data-action="next-step">下一步</button>':state.submitted?'<button class="primary" data-action="route" data-route="status">查看提交回执</button><button class="secondary" data-action="app" data-app="mail">查看邮箱</button>':'<button class="secondary" data-action="save-form">保存草稿</button><button class="primary" data-action="submit">确认提交</button>'}</div></section></div>`);}
+  function dashboard(){return shell(`<section class="dashboard"><h2>♧ 申请操作</h2><div class="dashboard-cards">${[['departments','申请院系开放查询','⌕'],['form','填写或修改申请信息','✎'],['status','申请状态查询','⌕'],['result','申请结果查询','⌕']].map(([route,name,symbol])=>`<button class="dashboard-card" data-action="route" data-route="${route}"><span aria-hidden="true">${symbol}</span>${name}</button>`).join('')}</div>${state.submitted?'<p class="small muted" style="margin-top:33px">本轮申请材料已提交，后续安排以邮件通知为准。</p>':''}</section>`);}
+  function departments(){return shell(`<div class="system-inner">${crumb('申请院系开放查询')}<h2 class="page-title">申请院系报名时间及注意事项</h2><div class="table-scroll"><table class="data-table"><thead><tr><th>院系编码</th><th>院系名称</th><th>报名时间</th><th>查看活动通知</th></tr></thead><tbody><tr><td>001</td><td>数学与统计学院</td><td>2026-09-01 至 2026-09-15<br><span class="muted">已结束</span></td><td>—</td></tr><tr><td>028</td><td>自动化学院</td><td>2026-09-01 至 2026-09-18<br><span class="muted">已结束</span></td><td>—</td></tr><tr><td>173</td><td>先进系统研究院</td><td>2026-09-22 至 2026-09-24<br><span class="small muted">本轮仅面向邮件通知的申请人</span></td><td><button class="primary" data-action="route" data-route="notice">查看</button></td></tr></tbody></table></div></div>`);}
+  function notice(){return shell(`<div class="system-inner">${crumb('活动通知')}<h2 class="page-title">关于2027年研究生招生补充考核材料确认的通知</h2><p class="small muted">发布单位：先进系统研究院招生办公室　发布日期：2026年9月22日</p><article class="notice-body"><p>为做好2027年推荐免试研究生接收工作，请已收到补充考核邮件的考生完成申请材料核对。未收到邮件的考生无需重复报名。</p><h3>一、本轮开放方向</h3><p>专业代码：<strong>0811</strong>（控制科学与工程）<br>研究方向：<strong>H03 · 复杂系统与人机交互</strong><br>申请院系：173 · 先进系统研究院</p><h3>二、材料要求</h3><p>请填写专业排名比例，并上传含成绩页、排名页及教务审核印章的完整证明。排名比例以本人名次除以参与排名人数计算，百分数保留两位小数。</p><h3>三、营期信息核对</h3><p>请依据本人留存的营期活动确认回执填写营期批次。已确认的基本信息不要求重复填报。</p><p>材料提交后，审核进度及后续安排通过申请人邮箱通知。候补顺位为研究院内部参考序列，不等同于正式拟录取结果。</p></article><div class="form-actions"><button class="primary" data-action="route" data-route="form">返回申请信息</button></div></div>`);}
+  function status(){return shell(`<div class="system-inner">${crumb('申请状态查询')}<h2 class="page-title">本人申请状态</h2>${state.submitted?`<div class="inline-success">材料确认已完成，已收到本轮申请。</div>${row('姓名','陈言')}${row('报名号','HC2026-0922-071')}${row('申请状态','材料已提交，等待后续考核')}${row('回执编号','RC-0922-071')}${row('提交时间','2026年9月22日 09:18')}${row('专业排名比例',escape(state.form.rank)+'%')}${row('申请方向',escape(state.form.program))}${row('营期批次',escape(state.form.camp))}${row('成绩及排名证明',escape(findFile(state.form.file)?.name||''),'本轮实际提交附件')}<div class="form-actions"><button class="secondary" data-action="save-receipt">保存提交回执</button></div><div class="task-card"><h3>后续安排已发送</h3><p>候补进度查询路径及补充考核后续安排已发送至本人登记邮箱。请自行查收。</p><button class="primary" data-action="app" data-app="mail">打开邮箱</button></div>`:'<div class="info-note">当前申请尚未提交。完成材料核对后，请在“申请信息提交”中确认提交。</div><button class="primary" data-action="route" data-route="form">继续填写</button>'}</div>`);}
+  function result(){return shell(`<div class="system-inner">${crumb('申请结果查询')}<h2 class="page-title">申请结果</h2><div class="info-note">暂无接收结果。正式结果以学校发布的拟录取公示及后续确认通知为准。</div>${row('申请人','陈言')}${row('本轮状态',state.submitted?'补充考核待安排':'申请材料未提交')}${row('拟录取结果','尚未发布')}</div>`);}
+  function rank(){if(!state.submitted)return status();return shell(`<div class="system-inner">${crumb('候补进度查询')}<div class="rank-summary"><div><span class="label">当前参考顺位</span><span class="rank-number">07</span></div><div><h2>陈言，你已进入候补序列。</h2><p>前序申请人的状态发生变化时，将通过邮箱告知。<br>更新时间：2026年9月22日 09:20</p></div></div><div class="table-scroll"><table class="data-table"><thead><tr><th>顺位</th><th>考生编号</th><th>姓名</th><th>当前状态</th></tr></thead><tbody>${[['1','HC-026','周亦成','待确认'],['2','HC-014','林知远','已确认参加考核'],['3','HC-039','许澄','材料已审核'],['4','HC-052','赵可宁','待确认'],['5','HC-043','顾宁','材料已审核'],['6','HC-068','蒋思齐','待确认'],['7','HC-071','陈言','材料已提交']].map(r=>`<tr ${r[0]==='7'?'class="me"':''}>${r.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="small muted" style="line-height:1.9">本页面为先进系统研究院本轮申请的参考序列，非正式拟录取公示。<br>请同时查阅已发送的补充考核后续安排。</p><div class="form-actions"><button class="secondary" data-action="save-rank">保存本页副本</button><button class="primary" data-action="app" data-app="mail">返回邮箱</button></div></div>`);}
+  function followup(){if(!state.submitted)return status();return shell(`<div class="system-inner">${crumb('补充考核情况核对')}<h2 class="page-title">补充考核情况核对</h2><p class="small muted">本轮任务：2027级推免招生 · 2026年9月补充考核 · RV-0922-071</p><div class="info-note">请核对本轮已记录回答。若对内容有疑问，可保留不同意见，后续安排另行通知。</div><div class="task-card"><h3>本轮已记录回答</h3><p>记录对象：陈言<br>条目编号：C-04<br>本轮归档日期：2026年9月22日</p><div class="voice-card">${icon('recorder','recorder')}<div style="flex:1"><div class="voice-title">本轮回答条目 · 陈言</div><div class="voice-info">归属：本轮补充考核材料</div></div><button class="text" data-action="transcript">${state.transcriptOpen?'收起文字':'查看语音转文字'}</button></div>${state.transcriptOpen?`<div class="transcript"><div class="record-label">条目随附文字记录 · C-04</div><blockquote>陈言：我当时没有看到有人要求停止。</blockquote><div class="transcript-foot">本条目为归档片段，不代表完整访谈。记录人标签按来源材料显示。</div><button class="text small" style="margin-top:15px" data-action="save-transcript">保存文字与来源信息</button></div><div style="padding-top:24px"><label for="recovery" class="small muted">对这条记录，你目前的确认情况：</label><select id="recovery" data-recovery style="display:block;margin:10px 0 16px;padding:10px;width:100%;border:1px solid #d7e0e7;color:#5d7182;background:#fff"><option value="">请选择</option><option ${state.recoveryAnswer==='记不清，暂时无法确认。'?'selected':''}>记不清，暂时无法确认。</option><option ${state.recoveryAnswer==='需要查看完整上下文。'?'selected':''}>需要查看完整上下文。</option><option ${state.recoveryAnswer==='这不是我对本轮考核作出的回答。'?'selected':''}>这不是我对本轮考核作出的回答。</option></select><button class="secondary" data-action="save-answer">保存本人备注</button>${state.savedAnswer?'<p class="saved-note">本人备注已保存。后续考核安排尚未下发。</p>':''}</div>`:''}</div><p class="small muted" style="line-height:1.9">本人记录的来历与上下文可在后续核对。已保存的副本保留在“文件 / 下载与留存”中。</p></div>`);}
+  function login(){return shell(`<section class="login-hero"><div class="campus-art" aria-hidden="true"></div><div class="login-card"><h1>欢迎报考衡川大学</h1><label class="hidden" for="login-project">招生项目</label><select id="login-project"><option>推免生预报名</option><option>硕士研究生招生</option><option>博士研究生招生</option></select><div class="login-help"><b>用户名：报名号；密码：注册时填写的密码。</b><br>请通过推免生预报名系统申请，并如实核对信息。当前电脑已保留本人申请会话。</div><input aria-label="用户名" value="HC2026-0922-071" readonly><input aria-label="密码" type="password" value="retained-session" readonly><button class="primary" data-action="restore-session">恢复当前申请会话</button><div class="login-links"><span>已识别本人邮件链接</span><span>本地会话</span></div></div></section><div class="dashboard"><h2>通知公告</h2><p class="small muted">2027年研究生招生补充考核材料确认工作已开始。</p></div>`,true);}
+  function browserPage(){const route=currentRoute();const pages={home,form:formPage,dashboard,departments,notice,status,result,rank,followup,login,blank:()=>'<div class="blank-page">在地址栏输入已获得的网址</div>'};return (pages[route]||pages.blank)();}
+  function browser(){const tab=currentTab();return `<div class="window-tabs">${state.tabs.map((t,i)=>`<div class="browser-tab ${i===state.activeTab?'selected':''}"><button class="text tab-label" data-action="select-tab" data-tab="${i}" style="color:inherit">${escape(labels[t.history[t.index]])}</button>${state.tabs.length>1?`<button class="close-tab" data-action="close-tab" data-tab="${i}" aria-label="关闭标签">×</button>`:''}</div>`).join('')}<button class="new-tab" data-action="new-tab" aria-label="新标签页">＋</button></div><div class="browser-toolbar"><button class="nav-icon" data-action="back" aria-label="后退" ${tab.index===0?'disabled':''}>‹</button><button class="nav-icon" data-action="forward" aria-label="前进" ${tab.index===tab.history.length-1?'disabled':''}>›</button><button class="nav-icon" data-action="refresh" aria-label="刷新">⟳</button><form class="address-box" id="address-form"><span aria-hidden="true">▤</span><input aria-label="浏览器地址栏" id="address" value="${escape(paths[currentRoute()]||'')}" autocomplete="off" spellcheck="false"></form><button class="nav-icon" data-action="history" aria-label="历史记录" title="历史记录">◷</button></div><div class="browser-content">${browserPage()}</div>`;}
+  function downloads(){return state.savedFiles.map(item=>({id:item.id,name:item.name.replace(/\.txt$/i,'.pdf'),date:item.date,size:'留存副本',text:item.text}));}
+  function findFile(id){return [...files.application,...files.july,...downloads()].find(f=>f.id===id);}
+  function filesPage(){const items=state.folder==='downloads'?downloads():files[state.folder];const folderName={application:'申请材料',july:'七月夏令营',downloads:'下载与留存'}[state.folder];return `<div class="app-content files-layout"><aside class="files-sidebar"><h3>陈言的电脑</h3>${[['application','申请材料'],['july','七月夏令营'],['downloads','下载与留存']].map(([id,label])=>`<button class="folder-button ${state.folder===id?'active':''}" data-action="files-folder" data-folder="${id}">${icon('folder')}<span>${label}</span></button>`).join('')}<button class="folder-button" data-action="app" data-app="note">${icon('note')}<span>备忘录</span></button></aside><section class="files-main"><div class="files-toolbar">此电脑　›　文档　›　${folderName}</div><div class="file-list"><div class="file-table-head"><span>名称</span><span>修改日期</span><span>大小</span></div>${items.length?items.map(file=>`<button class="file-item" data-action="open-file" data-file="${file.id}"><span class="name">${icon('document')}<span>${file.name}</span></span><time>${file.date}</time><span class="size">${file.size}</span></button>`).join(''):'<div class="empty-state">此文件夹为空。<br><span class="small">另存的页面与附件会保存在这里。</span></div>'}</div><div class="file-preview">${items.length} 个项目${state.folder==='july'?' · 此处为七月已经保存的原始文件。':''}</div></section></div>`;}
+  const mails={
+    invitation:{sender:'先进系统研究院招生办公室',address:'admission@hcu.example',time:'2026年9月22日 08:06',subject:'关于2027年研究生招生补充考核材料确认的通知',body:()=>'<p>陈言同学：</p><p>您好。请通过申请人工作台确认本人申请材料，并查阅后续补充考核安排。</p><p>七月已登记的信息已导入。请补充专业排名比例、申请方向、营期批次及盖章成绩证明。</p><button class="primary" data-action="route" data-route="form">进入申请人工作台</button><p class="small muted">https://admission.hcu.example/2027<br>本封邮件已于进入页面前阅读。</p><p>衡川大学先进系统研究院<br>招生办公室</p>'},
+    submitted:{sender:'研究生报考服务系统',address:'service@xspt.hcu.example',time:'2026年9月22日 09:20',subject:'2027级推免：材料确认回执与候补进度查询',body:()=>'<p>陈言同学：</p><p>本轮申请材料已收到，回执编号 RC-0922-071。</p><p>您已进入研究院本轮候补参考序列。请通过以下入口查看本人顺位及相关考生状态。</p><button class="primary" data-action="route" data-route="rank">查询候补进度</button><p class="small muted">https://xspt.hcu.example/sstm/tm/waitlist</p><p>参考顺位不等同于正式拟录取结果。前序申请人的状态发生变化时，将另行通知。</p>'},
+    followup:{sender:'先进系统研究院教务办公室',address:'teaching@hcu.example',time:'2026年9月22日 09:24',subject:'2027级补充考核：请核对本人已记录回答',body:()=>'<p>陈言同学：</p><p>本轮补充考核已建立本人回答条目，请查阅并核对目前显示的记录内容。</p><p>如对记录内容存在疑问，可以在页面保留本人意见。后续考核安排将另行下发。</p><button class="primary" data-action="route" data-route="followup">查看本轮情况核对</button><p class="small muted">任务编号：RV-0922-071<br>https://xspt.hcu.example/sstm/tm/revisit/0922</p><p>衡川大学先进系统研究院<br>教务办公室</p>'}
+  };
+  function mailPage(){const ids=state.submitted?['followup','submitted','invitation']:['invitation'];const selected=ids.includes(state.selectedMail)?state.selectedMail:'invitation';const mail=mails[selected];return `<div class="app-content mail-layout"><aside class="mail-nav"><div class="mail-logo">云笺邮箱<div class="mail-account">chenyan@letter.example</div></div><div class="mail-folder">收件箱　${ids.length}</div><p class="small muted" style="padding:8px 12px">已发送</p><p class="small muted" style="padding:8px 12px">草稿箱</p></aside><section class="mail-list"><div class="mail-list-label">收件箱 / 2026年9月22日</div>${ids.map(id=>`<button class="mail-item ${id===selected?'active':''}" data-action="mail" data-mail="${id}"><span class="sender">${!state.readMails.includes(id)?'● ':''}${mails[id].sender}</span><strong>${mails[id].subject}</strong><small>${mails[id].time}</small></button>`).join('')}</section><article class="mail-reading"><h1>${mail.subject}</h1><div class="mail-metadata">发件人：${mail.sender} &lt;${mail.address}&gt;<br>收件人：陈言 &lt;chenyan@letter.example&gt;<br>送达时间：${mail.time}</div><div class="mail-body">${mail.body()}</div></article></div>`;}
+  function chatPage(){return `<div class="app-content chat-layout"><aside class="chat-rail"><div class="chat-avatar">陈</div>${icon('chat')}</aside><aside class="chat-list"><div class="chat-search">⌕　搜索</div><p>暂无会话</p></aside><section class="chat-empty">${icon('chat')}<p>暂无新的消息</p></section></div>`;}
+  function memoTasks(){const done=Object.values(state.checklist).filter(Boolean).length;return `<section class="memo-checklist" aria-label="待办清单"><div class="memo-list-heading"><div><span class="memo-eyebrow">9月22日 · 今天</span><h2>先把手头的材料弄好。</h2></div><span class="memo-count">${done} / 4</span></div><div class="memo-tasks">${checklistItems.map(([key,label])=>`<label class="memo-task ${state.checklist[key]?'is-done':''}"><input type="checkbox" data-checklist="${key}" ${state.checklist[key]?'checked':''}><span>${label}</span></label>`).join('')}</div>${state.memoEggSeen?`<button class="memo-fold" data-action="memo-egg"><span>夹在清单后面的纸条</span><small>7月10日 · 写给九月的自己</small><span aria-hidden="true">↗</span></button>`:'<p class="memo-tip">核对完一项，就划掉一项。</p>'}</section>`;}
+  function notePage(){return `<div class="notepad-toolbar"><span>备忘录</span><div><button class="text" data-action="export-memo">导出当前备忘录 PDF</button><span id="note-save-status">已保存</span></div></div><div class="memo-layout"><div id="memo-tasks">${memoTasks()}</div><section class="memo-writing"><label for="memo">随手记</label><textarea class="notepad-area" id="memo" aria-label="备忘录正文" spellcheck="false" placeholder="想记下的事情……">${escape(state.note)}</textarea></section></div><div class="notepad-status">仅保存在这台电脑 · 待办勾选与随手记分别保存</div>`;}
+  function render(){if(!state.entered){$('#app').innerHTML=home();if(!state.openingClosed&&!$('#dialog-root').innerHTML)opening();return;}
+    const appNames={browser:'浏览器',files:'文件',mail:'邮箱',chat:'即时通讯',note:'备忘录'};
+    const appIcons={browser:'browser',files:'folder',mail:'mail',chat:'chat',note:'note'};
+    const contents={browser,files:filesPage,mail:mailPage,chat:chatPage,note:notePage};
+    $('#app').innerHTML=`<div class="desktop"><section class="window" aria-label="${appNames[state.activeApp]}">${state.activeApp!=='browser'?`<header class="window-titlebar"><span class="title-name">${icon(appIcons[state.activeApp])}<span>${appNames[state.activeApp]}</span></span><div class="window-controls" aria-hidden="true"><span>—</span><span>□</span></div></header>`:''}${contents[state.activeApp]()}</section><nav class="taskbar" aria-label="桌面应用"><span class="task-day">陈言的电脑</span>${Object.keys(appNames).map(app=>`<button class="task-app ${state.activeApp===app?'active':''}" data-action="app" data-app="${app}" title="${appNames[app]}" aria-label="${appNames[app]}">${icon(appIcons[app])}<span class="task-label">${appNames[app]}</span>${app==='mail'&&state.submitted&&state.readMails.length<3?'<i class="unread-dot"></i>':''}</button>`).join('')}<button class="task-clock" data-action="calendar" aria-label="日期及本地进度">${state.submitted?'09:24':'09:12'}<br>2026/09/22</button></nav></div>`;
+    if(state.activeApp!=='browser')document.querySelectorAll('.title-name svg').forEach(el=>{el.style.width='16px';el.style.height='16px';});
+  }
+  function documentContent(file,entry,compact=false){
+    const images=entry.tickets||entry.pages;
+    return `<div class="pdf-toolbar"><span>${entry.tickets?'车票图片 · 往返两张':`PDF · ${entry.pages.length} 页`} · ${entry.size}</span><div><button class="secondary" data-action="zoom-document">放大阅读</button><a class="secondary" href="${entry.pdf}" target="_blank" rel="noopener">打开 PDF</a><a class="primary" href="${entry.pdf}" download="${escape(file.name)}">下载 PDF</a></div></div><div class="pdf-pages ${entry.tickets?'ticket-pages':''}" tabindex="0" aria-label="${escape(file.name)}页面预览">${images.map((src,i)=>`<figure><img src="${src}" alt="${escape(file.name)}${entry.tickets?(i===0?'去程车票':'返程车票'):`第${i+1}页`}" ${i?'loading="lazy"':''}><figcaption>${entry.tickets?(i===0?'去程 · 2026年7月11日':'返程 · 2026年7月13日'):`第 ${i+1} 页 / 共 ${images.length} 页`}</figcaption></figure>`).join('')}</div><details class="pdf-text"><summary>查看文字内容</summary><pre>${escape(entry.text)}</pre></details>${compact?'':`<div class="doc-meta">本地文件 · ${escape(file.date)}${file.id==='july-note'?' · 七月原始留存，只读':''}</div>`}`;
+  }
+  async function showFile(id,supplied){const file=supplied||findFile(id);if(!file)return;
+    if(file.photo){modal(`<h2>${escape(file.name)}</h2><div class="photo-sheet"><span class="photo-caption">先进系统研究院 · 北楼</span><div class="photo-building"></div><span class="photo-date">2026.07.11 09:32</span></div><pre class="document-view">${escape(file.text)}</pre>`,'document-dialog photo-dialog',file.name);return;}
+    modal(`<h2>${escape(file.name)}</h2><div id="document-body" data-document-id="${escape(id)}"><p class="document-loading">正在打开文档……</p></div>`,'document-dialog pdf-dialog',file.name);
+    try{const entry=file.pdf?file:await window.DibuPDF.fromText(file);const body=$('#document-body');
+      if(!body||body.dataset.documentId!==id){if(entry.temporary)URL.revokeObjectURL(entry.pdf);return;}
+      activeDocument=entry;body.innerHTML=documentContent(file,entry);
+    }catch(error){const body=$('#document-body');if(body)body.innerHTML='<p>文档暂时未能打开，请关闭后重试。</p>';console.error('Document export failed',error);}
+  }
+  function picker(){modal(`<h2>选择申请材料</h2><p class="small muted">此电脑 / 文档 / 申请材料 · 请核对完整证明。</p><div class="picker-layout"><div class="file-picker">${files.application.filter(f=>f.id.startsWith('grade')).map(f=>`<div class="picker-item"><label><input type="radio" name="attachment" value="${f.id}" ${state.form.file===f.id?'checked':''}><span><strong>${f.name}</strong><br><small>${f.date} · ${f.size}</small></span></label><button class="text small" type="button" data-action="preview-picker-file" data-file="${f.id}">查看内容</button></div>`).join('')}</div><div id="picker-preview"><p class="picker-placeholder">点击“查看内容”，在这里翻阅完整 PDF。</p></div></div><div class="dialog-actions"><button class="secondary" data-action="close-dialog">取消</button><button class="primary" data-action="choose-file">选择</button></div>`,'picker-dialog','选择本地材料');}
+  function submit(){const f=state.form;const errors=[];const rankNumber=Number(f.rank.replace(/%/g,''));if(!f.rank.trim()||!Number.isFinite(rankNumber)||Math.abs(rankNumber-5)>0.0001)errors.push('学习信息：排名比例与完整证明中的 3 / 60 不一致，请核对计算。');if(f.program!=='0811/H03')errors.push('申请信息：所选方向不在本轮补充考核开放范围内，请核对9月22日通知。');if(f.camp.trim().toUpperCase()!=='HC26-JUL-02')errors.push('申请信息：营期批次与本人确认回执不一致，请核对七月夏令营文件。');if(f.file!=='grade-certified')errors.push('上传材料：请选用含完整排名页及教务审核印章的成绩证明。');if(!f.ack)errors.push('请勾选信息核对确认。');if(errors.length){state.error=errors.join('\n');save();render();return;}
+    modal('<h2>确认提交申请材料</h2><p class="form-text">本次将提交陈言的申请信息及所选成绩证明。提交后进入本轮审核，后续安排通过登记邮箱通知。</p><div class="dialog-actions"><button class="secondary" data-action="close-dialog">返回核对</button><button class="primary" data-action="confirm-submit">确认提交</button></div>','','确认提交');
+  }
+  function saveCopy(id,name,text){name=name.replace(/\.txt$/i,'.pdf');if(!state.savedFiles.some(f=>f.id===id))state.savedFiles.push({id,name,text,date:'2026/09/22 09:24'});save();toast('已保存至“文件 / 下载与留存”。');}
+  const actions={
+    'close-dialog':closeDialog,
+    enter(){state.entered=true;state.openingClosed=true;state.activeApp='browser';state.tabs=[{history:['home','form'],index:1}];state.activeTab=0;state.step=0;save();render();},
+    route(el){go(el.dataset.route);},
+    app(el){state.activeApp=el.dataset.app;if(state.activeApp==='mail'&&!state.readMails.includes(state.selectedMail))state.readMails.push(state.selectedMail);save();render();},
+    step(el){state.step=Number(el.dataset.step);state.error='';save();render();},
+    'next-step'(){state.step=Math.min(12,state.step+1);save();render();},
+    'prev-step'(){state.step=Math.max(0,state.step-1);save();render();},
+    'save-form'(){save();toast('申请信息已保存为草稿。');},
+    'files-folder'(el){state.folder=el.dataset.folder;state.activeApp='files';save();render();},
+    'open-file'(el){showFile(el.dataset.file);},
+    picker,
+    'zoom-document'(el){const pages=el.closest('.pdf-toolbar').nextElementSibling;pages.classList.toggle('zoomed');el.textContent=pages.classList.contains('zoomed')?'适应窗口':'放大阅读';},
+    'memo-egg'(){modal('<div class="memo-egg-paper"><span>7月10日 · 写给九月的自己</span><h2>等这些方框都打上勾，</h2><p>如果还没有结果，就先去吃顿热饭。</p><p>还有，别因为终于有人肯要你，<br>就把自己的每一个疑问都划掉。</p><div class="memo-egg-sign">陈言</div></div>','memo-egg-dialog','夹在清单后面的纸条');},
+    'export-memo'(){const items=checklistItems.map(([key,label])=>`${state.checklist[key]?'☑':'☐'} ${label}`).join('\n');showFile('memo-export',{id:'memo-export',name:'备忘录_当前快照.pdf',date:'2026/09/22 '+(state.submitted?'09:24':'09:12'),text:'今日待办\n'+items+'\n\n随手记\n'+state.note});},
+    'preview-picker-file'(el){const f=findFile(el.dataset.file);$('#picker-preview').innerHTML=documentContent(f,f,true);},
+    'choose-file'(){const selected=$('input[name="attachment"]:checked');if(!selected){toast('请先选择一个材料版本。');return;}state.form.file=selected.value;save();closeDialog();render();toast('材料已选定，最终提交前仍可更换。');},
+    submit,
+    'confirm-submit'(){state.submitted=true;state.form.rank='5.00';state.form.camp='HC26-JUL-02';state.error='';save();closeDialog();render();toast('申请已提交。邮箱有新的通知。');},
+    mail(el){state.selectedMail=el.dataset.mail;if(!state.readMails.includes(state.selectedMail))state.readMails.push(state.selectedMail);save();render();},
+    transcript(){state.transcriptOpen=!state.transcriptOpen;save();render();},
+    'save-answer'(){if(!state.recoveryAnswer){toast('请先选择本人目前的确认情况。');return;}state.savedAnswer=true;const version=state.savedFiles.filter(f=>f.id.startsWith('my-revisit-note')).length+1;saveCopy(`my-revisit-note-${version}`,`本人情况核对备注_RV-0922-071_${version}.txt`,`本人情况核对备注（本地留存）\n任务：RV-0922-071\n记录对象：陈言\n2026年9月22日\n版本：${version}\n\n${state.recoveryAnswer}\n\n备注按本人实际选择原样保存，此副本不修改之前保存的版本。`);save();render();},
+    'save-receipt'(){if(!state.submitted)return;saveCopy('submission-receipt','提交回执_RC-0922-071.txt',`本轮申请材料提交回执\n来源：https://xspt.hcu.example/sstm/tm/status\n取得时间：2026年9月22日 09:24\n提交时间：2026年9月22日 09:18\n回执编号：RC-0922-071\n\n申请人：陈言\n报名号：HC2026-0922-071\n申请状态：材料已提交，等待后续考核\n专业排名比例：${state.form.rank}%\n申请方向：${state.form.program}\n营期批次：${state.form.camp}\n成绩及排名证明：${findFile(state.form.file)?.name||''}\n\n上述字段与附件版本为本轮实际提交内容。`);},
+    'save-rank'(){saveCopy('rank-copy','候补进度_2026-09-22_0920.txt','来源：https://xspt.hcu.example/sstm/tm/waitlist\n取得时间：2026年9月22日 09:24\n页面更新时间：2026年9月22日 09:20\n\n研究院本轮参考序列\n1 HC-026 周亦成 待确认\n2 HC-014 林知远 已确认参加考核\n3 HC-039 许澄 材料已审核\n4 HC-052 赵可宁 待确认\n5 HC-043 顾宁 材料已审核\n6 HC-068 蒋思齐 待确认\n7 HC-071 陈言 材料已提交\n\n本页非正式拟录取公示。');},
+    'save-transcript'(){saveCopy('transcript-copy','情况登记_C-04_文字与来源.txt','来源：https://xspt.hcu.example/sstm/tm/revisit/0922\n取得时间：2026年9月22日 09:24\n本轮任务：RV-0922-071\n条目编号：C-04\n本轮归档日期：2026年9月22日\n记录人标签：陈言\n\n陈言：我当时没有看到有人要求停止。\n\n页面说明：本条目为归档片段，不代表完整访谈。记录人标签按来源材料显示。');},
+    back(){const tab=currentTab();if(tab.index>0)tab.index--;save();render();},
+    forward(){const tab=currentTab();if(tab.index<tab.history.length-1)tab.index++;save();render();},
+    refresh(){save();render();toast('页面已刷新。');},
+    'new-tab'(){if(state.tabs.length>=5){toast('最多保留5个标签页。');return;}state.tabs.push({history:['blank'],index:0});state.activeTab=state.tabs.length-1;save();render();},
+    'select-tab'(el){state.activeTab=Number(el.dataset.tab);save();render();},
+    'close-tab'(el){if(state.tabs.length===1)return;const i=Number(el.dataset.tab);state.tabs.splice(i,1);if(state.activeTab>i)state.activeTab--;else if(state.activeTab>=state.tabs.length)state.activeTab=state.tabs.length-1;save();render();},
+    history(){const items=[...new Set(state.tabs.flatMap(t=>t.history))].filter(r=>r!=='blank');modal(`<h2>浏览历史</h2><div class="history-list">${items.map(r=>`<button data-action="history-route" data-route="${r}">${labels[r]}<small>${paths[r]}</small></button>`).join('')}</div>`,'','浏览历史');},
+    'history-route'(el){closeDialog();go(el.dataset.route);},
+    account(){modal('<h2>申请账户</h2><p class="form-text">申请人：陈言<br>报名号：HC2026-0922-071<br>登记邮箱：chenyan@letter.example<br>验证来源：本人补充考核邮件链接</p>','','申请账户');},
+    'restore-session'(){go('form');},
+    calendar(){modal('<h2>2026年9月22日 · 星期二</h2><p class="form-text">当前进度已保存在这台电脑的浏览器中。<br>关闭页面后可继续。</p><div class="dialog-actions"><button class="secondary" data-action="reset-prompt">重新开始本段</button><button class="primary" data-action="close-dialog">返回</button></div>','','本地进度');},
+    'reset-prompt'(){modal('<h2>重新开始本段</h2><p class="form-text">这会清除本浏览器中本段的申请草稿、提交进度、备忘录与留存副本。</p><div class="dialog-actions"><button class="secondary" data-action="close-dialog">取消</button><button class="primary" data-action="reset">确认重新开始</button></div>','','重新开始确认');},
+    reset(){state=JSON.parse(JSON.stringify(defaultState));try{localStorage.removeItem(KEY);}catch{}$('#dialog-root').innerHTML='';render();}
+  };
+  document.addEventListener('click',event=>{const el=event.target.closest('[data-action]');if(!el||el.disabled)return;const action=actions[el.dataset.action];if(action){event.preventDefault();action(el);}});
+  document.addEventListener('input',event=>{const el=event.target;if(el.id==='memo'){state.note=el.value;save();$('#note-save-status').textContent='已保存';}else if(el.dataset.field){state.form[el.dataset.field]=el.type==='checkbox'?el.checked:el.value;save();}else if(el.hasAttribute('data-recovery')){state.recoveryAnswer=el.value;state.savedAnswer=false;$('.saved-note')?.remove();save();}});
+  document.addEventListener('change',event=>{const el=event.target;if(el.dataset.checklist){
+    const key=el.dataset.checklist;if(!checklistItems.some(([id])=>id===key))return;
+    state.checklist[key]=el.checked;
+    const reveal=!state.memoEggSeen&&checklistItems.every(([id])=>state.checklist[id]);
+    if(reveal)state.memoEggSeen=true;save();$('#memo-tasks').innerHTML=memoTasks();
+    document.querySelector(`[data-checklist="${key}"]`)?.focus();
+    if(reveal){toast('清单翻到最后，露出一张旧纸条。');actions['memo-egg']();}return;
+  }if(el.dataset.field){state.form[el.dataset.field]=el.type==='checkbox'?el.checked:el.value;save();}if(el.hasAttribute('data-recovery')){state.recoveryAnswer=el.value;state.savedAnswer=false;$('.saved-note')?.remove();save();}});
+  document.addEventListener('submit',event=>{if(event.target.id!=='address-form')return;event.preventDefault();const value=$('#address').value.trim().replace(/\/$/,'').replace('admission.hcu.example/2026','admission.hcu.example/2027');const route=Object.entries(paths).find(([,path])=>path.replace(/\/$/,'')===value);if(route){if(['rank','followup'].includes(route[0])&&!state.submitted){toast('请先完成本人申请材料提交。');return;}go(route[0]);}else{toast('未找到该地址，请核对已经获得的完整网址。');}});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&$('#dialog-root').innerHTML)closeDialog();if(event.key==='Tab'&&$('#dialog-root').innerHTML){const focusable=[...$('#dialog-root').querySelectorAll('button:not([disabled]),input,select,textarea,a[href]')];const first=focusable[0],last=focusable.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}});
+  render();
+})();
