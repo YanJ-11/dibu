@@ -24,7 +24,13 @@
 .pdf-text pre{font-family:"Microsoft YaHei",sans-serif;white-space:pre-wrap;line-height:1.8;max-height:160px;overflow:auto;background:#f6f8fa;padding:14px;margin:6px 0 0;color:#445767}
 .pdf-dialog .doc-meta{flex:none;margin-top:8px;font-size:11px}
 .document-loading{margin:80px auto;color:#7b8b99}
-.photo-dialog{width:min(1040px,96vw)}
+.dialog.photo-dialog{width:min(1120px,96vw);padding:24px 28px;max-height:94dvh;overflow:auto}
+.photo-dialog h2{padding-right:30px;font-size:18px}
+.camp-photo-view{margin:0;background:#20262b;border:1px solid #283037}
+.camp-photo-view img{display:block;width:100%;height:auto;max-height:68dvh;object-fit:contain}
+.camp-photo-view figcaption{display:flex;justify-content:space-between;gap:14px;padding:12px 16px;color:#c2c9ce;font-size:12px}
+.camp-photo-view time{font-family:Consolas,monospace}
+.photo-note{white-space:pre-wrap;font-family:inherit;font-size:12px;color:#77858f;line-height:1.8;margin:16px 0 0}
 .picker-dialog>p{margin:0 0 18px}
 .picker-layout{display:grid;grid-template-columns:255px minmax(0,1fr);gap:20px;flex:1;min-height:0}
 .picker-layout .file-picker{overflow:auto;justify-content:flex-start}

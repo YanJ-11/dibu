@@ -72,7 +72,6 @@
       "name": "研究院北楼_报到日.jpg",
       "date": "2026/07/11 09:32",
       "photo": true,
-      "size": "示意照片",
       "text": "照片备注：报到当天，研究院北楼。\n保存日期：2026年7月11日。\n\n建筑门口挂着夏令营报到处的指示牌。"
     },
     {
@@ -165,7 +164,7 @@
     return `<div class="pdf-toolbar"><span>${entry.tickets?'车票图片 · 往返两张':`PDF · ${entry.pages.length} 页`} · ${entry.size}</span><div><button class="secondary" data-action="zoom-document">放大阅读</button><a class="secondary" href="${entry.pdf}" target="_blank" rel="noopener">打开 PDF</a><a class="primary" href="${entry.pdf}" download="${escape(file.name)}">下载 PDF</a></div></div><div class="pdf-pages ${entry.tickets?'ticket-pages':''}" tabindex="0" aria-label="${escape(file.name)}页面预览">${images.map((src,i)=>`<figure><img src="${src}" alt="${escape(file.name)}${entry.tickets?(i===0?'去程车票':'返程车票'):`第${i+1}页`}" ${i?'loading="lazy"':''}><figcaption>${entry.tickets?(i===0?'去程 · 2026年7月11日':'返程 · 2026年7月13日'):`第 ${i+1} 页 / 共 ${images.length} 页`}</figcaption></figure>`).join('')}</div><details class="pdf-text"><summary>查看文字内容</summary><pre>${escape(entry.text)}</pre></details>${compact?'':`<div class="doc-meta">本地文件 · ${escape(file.date)}${file.id==='july-note'?' · 七月原始留存，只读':''}</div>`}`;
   }
   async function showFile(id,supplied){const file=supplied||findFile(id);if(!file)return;
-    if(file.photo){modal(`<h2>${escape(file.name)}</h2><div class="photo-sheet"><span class="photo-caption">先进系统研究院 · 北楼</span><div class="photo-building"></div><span class="photo-date">2026.07.11 09:32</span></div><pre class="document-view">${escape(file.text)}</pre>`,'document-dialog photo-dialog',file.name);return;}
+    if(file.photo){modal(`<h2>${escape(file.name)}</h2><div class="pdf-toolbar"><span>JPEG · ${file.width} × ${file.height} · ${escape(file.size)}</span><div><a class="secondary" href="${escape(file.image)}" target="_blank" rel="noopener">查看原图</a><a class="primary" href="${escape(file.image)}" download="${escape(file.name)}">下载照片</a></div></div><figure class="camp-photo-view"><img src="${escape(file.image)}" width="${file.width}" height="${file.height}" alt="七月报到当天拍摄的研究院北楼，树木与广场后的教学科研楼"><figcaption><span>先进系统研究院 · 北楼</span><time>2026.07.11 09:32</time></figcaption></figure><pre class="photo-note">${escape(file.text)}</pre>`,'document-dialog photo-dialog',file.name);return;}
     modal(`<h2>${escape(file.name)}</h2><div id="document-body" data-document-id="${escape(id)}"><p class="document-loading">正在打开文档……</p></div>`,'document-dialog pdf-dialog',file.name);
     try{const entry=file.pdf?file:await window.DibuPDF.fromText(file);const body=$('#document-body');
       if(!body||body.dataset.documentId!==id){if(entry.temporary)URL.revokeObjectURL(entry.pdf);return;}

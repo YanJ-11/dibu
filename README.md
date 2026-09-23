@@ -14,3 +14,8 @@ GitHub Pages 使用 `main` 分支的仓库根目录。将更新后的静态文�
 不要更改仓库名称或 Pages 的发布路径。无需本地服务器、隧道、数据库或运行时密钥。
 
 本仓库只包含试玩代码及公开道具，不包含未发布的剧本、作者答案和私人参考材料。
+
+## 图片来源
+
+`north-building.jpg` 使用 Charlie fong（冯成）拍摄的建筑照片，经裁切、调色后用作场景素材。
+原作：[Jilinuniversity laboratory](https://commons.wikimedia.org/wiki/File:Jilinuniversity_laboratory.jpg)，作者已将其贡献至公有领域（Public domain）。素材取景地与游戏故事无关。
