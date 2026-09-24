@@ -5,7 +5,7 @@
   const $ = (selector) => document.querySelector(selector);
   const escape = (value = '') => String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const defaultState = {
-    storyRevision:3, applicationRevision:2, dayTwoRevision:1, entered:false, openingClosed:false, activeApp:'browser', step:0,
+    storyRevision:3, applicationRevision:2, dayTwoRevision:2, entered:false, openingClosed:false, activeApp:'browser', step:0,
     form:{rank:'',program:'',camp:'',file:'',ack:false}, submitted:false, error:'',
     note:'9月22日\n\n', checklist:{info:false,proof:false,july:false,notice:false}, memoEggSeen:false,
     selectedMail:'invitation', readMails:['invitation'], folder:'application', savedFiles:[],
@@ -20,7 +20,9 @@
     day:1, dayOneEnded:false, dayTwoChecklist:{archive:false,contact:false,packet:false},
     fanWindowOpen:false, fanArchiveMessages:[], fanArchiveTyping:false, fanArchiveStage:0, fanContactOffered:false,
     fanAdded:false, activeChat:'zhao', fanMessages:[], fanTyping:false, fanQuestionStage:0, fanFirstPacketReceived:false,
-    fanSubjectMapSaved:false, fanClassificationSaved:false
+    fanSubjectMapSaved:false, fanClassificationSaved:false, fanCodesVerified:false, fanCodeAttempts:0, fanCodeDraft:{material:'',subject:'',display:''},
+    fanSecondPacketReceived:false, fanSecondPacketOpened:{}, fanComparisonComplete:false,
+    fanModelIndexReceived:false, fanModelIndexOpened:false
   };
   // A shared preview link can always start from the authored opening without
   // changing the normal site's saved-progress behavior.
@@ -41,6 +43,17 @@
     if(state.submitted){state.step=12;state.form={rank:'5.00',program:'0811/H03',camp:'HC26-JUL-02',file:'grade-certified',ack:true};}
     else{state.step=0;state.form={...defaultState.form};}
   }
+  if(loadedState&&loadedState.dayTwoRevision!==2){
+    state.dayTwoRevision=2;
+    state.fanCodesVerified=false;
+    state.fanCodeAttempts=0;
+    state.fanCodeDraft={material:'',subject:'',display:''};
+    state.fanSecondPacketReceived=false;
+    state.fanSecondPacketOpened={};
+    state.fanComparisonComplete=false;
+    state.fanModelIndexReceived=false;
+    state.fanModelIndexOpened=false;
+  }
   // Preserve progress from the earlier single-code version: a previously verified
   // session had already been allowed to read both historical documents.
   if(state.campusAccessGranted){state.campusAccessProject=true;state.campusAccessMemorial=true;}
@@ -49,6 +62,8 @@
   if(state.fanArchiveTyping)state.fanArchiveTyping=false;
   if(state.fanTyping)state.fanTyping=false;
   if(state.tangInquiryPending)state.tangInquiryPending=false;
+  if(!state.fanSecondPacketOpened||typeof state.fanSecondPacketOpened!=='object')state.fanSecondPacketOpened={};
+  if(!state.fanCodeDraft||typeof state.fanCodeDraft!=='object')state.fanCodeDraft={material:'',subject:'',display:''};
   if(state.folder==='reference')state.folder='application';
   if(freshPreview){try{history.replaceState(null,'',location.pathname);}catch{}}
   // The old default text is migrated only when it is unchanged. Player notes are never rewritten.
@@ -57,7 +72,7 @@
   let toastTimer, activeDocument;
   function releaseDocument(){if(activeDocument?.temporary)URL.revokeObjectURL(activeDocument.pdf);activeDocument=null;}
   const checklistItems=[['info','补交项目说明'],['notice','完成问卷并查看接收进度'],['july','核对七月活动回执'],['proof','留存候补进度副本']];
-  const dayTwoItems=[['archive','查看旧站维护窗口'],['contact','添加旧站维护员'],['packet','核对第一批留存资料']];
+  const dayTwoItems=[['archive','查看旧站维护窗口'],['contact','添加旧站维护员'],['packet','核对第一批留存资料'],['link','按编号取得第二批资料'],['compare','比对原始访谈与整理摘要'],['model','核验模型交接索引']];
   function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch{toast('浏览器未允许本地保存，请保持此页面打开。');}}
   const iconPaths = {
     browser:'<circle cx="12" cy="12" r="9" fill="#1c94d4"/><path d="M3 13c5-7 12-9 17-4-1-6-10-9-15-3-2 2-3 5-2 7" fill="#62c1d3"/><path d="M4 14c3 6 12 9 17 1-6 4-11 1-11-3-3 0-5 1-6 2" fill="#1178ba"/>',
@@ -150,6 +165,13 @@
     Object.assign({id:'fan-subject-map',name:'2023级入学记录与编号对照_局部.pdf',date:'2026/09/23 09:02'},window.DIBU_DOCUMENTS['fan-subject-map']||{}),
     Object.assign({id:'fan-classification',name:'申请分类字段说明_脱敏.pdf',date:'2026/09/23 09:02'},window.DIBU_DOCUMENTS['fan-classification']||{})
   ];
+  const fanSecondPacketFiles=[
+    Object.assign({id:'fan-training-group',name:'林知远培养分组记录_节录.pdf',date:'2026/09/23 09:18'},window.DIBU_DOCUMENTS['fan-training-group']||{}),
+    Object.assign({id:'fan-interview-original',name:'第六次阶段访谈原始转写_节录.pdf',date:'2026/09/23 09:18'},window.DIBU_DOCUMENTS['fan-interview-original']||{}),
+    Object.assign({id:'fan-interview-summary',name:'第六次阶段访谈整理摘要.pdf',date:'2026/09/23 09:18'},window.DIBU_DOCUMENTS['fan-interview-summary']||{}),
+    Object.assign({id:'fan-task-rules',name:'双方对照任务规则_节选.pdf',date:'2026/09/23 09:18'},window.DIBU_DOCUMENTS['fan-task-rules']||{})
+  ];
+  const fanModelIndexFile=Object.assign({id:'fan-model-handoff',name:'模型交接索引_MX-24-014_局部.pdf',date:'2026/09/23 09:26'},window.DIBU_DOCUMENTS['fan-model-handoff']||{});
   const steps=['申请须知','基本信息','家庭主要成员','学习信息','外语水平','计算机水平','学习和工作经历','学术成果','奖励或处分（本科期间）','申请信息','上传照片','上传材料','申请信息提交'];
   const campuses={
     jiangnan:{name:'江南信息大学',english:'JIANGNAN UNIVERSITY OF INFORMATION',domain:'www.jniu.example',accent:'#315d91',accentDark:'#23456c',lead:'信息工程学院启动新学期科研训练计划',leadText:'面向高年级学生开放数据处理、智能系统与通信工程等方向的校级项目申报。',notices:['2026 年秋季学期选课补退选安排','图书馆南馆夜间开放时间调整','关于开展学生证集中补办的通知'],schools:['信息工程学院举行新生专业导学','网络空间安全学院发布助教名单','校友创新论坛报名通知'],services:['教务系统','科研项目申报','图书资源','学生事务'],serviceIntro:'面向本科生的课程、项目和校园事务办理入口。'},
@@ -291,13 +313,41 @@
   };
   function mailPage(){const ids=state.submitted?[(state.tangAsked?'attachmentReply':null),(state.identityReported?'correction':null),(state.sourceNoticeSent?'source':null),(state.savedAnswer?'forum':null),'submitted','invitation'].filter(Boolean):['invitation'];const selected=ids.includes(state.selectedMail)?state.selectedMail:ids[0];const mail=mails[selected];return `<div class="app-content mail-layout"><aside class="mail-nav"><div class="mail-logo">云笺邮箱<div class="mail-account">chenyan@letter.example</div></div><div class="mail-folder">收件箱　${ids.length}</div><p class="small muted" style="padding:8px 12px">已发送</p><p class="small muted" style="padding:8px 12px">草稿箱</p></aside><section class="mail-list"><div class="mail-list-label">收件箱 / 2026年9月22日</div>${ids.map(id=>`<button class="mail-item ${id===selected?'active':''}" data-action="mail" data-mail="${id}"><span class="sender">${!state.readMails.includes(id)?'● ':''}${mails[id].sender}</span><strong>${mails[id].subject}</strong><small>${mails[id].time}</small></button>`).join('')}</section><article class="mail-reading"><h1>${mail.subject}</h1><div class="mail-metadata">发件人：${mail.sender} &lt;${mail.address}&gt;<br>收件人：陈言 &lt;chenyan@letter.example&gt;<br>送达时间：${mail.time}</div><div class="mail-body">${mail.body()}</div></article></div>`;}
   function chatPage(){const contacts=[];if(state.zhaoAdded)contacts.push('zhao');if(state.fanAdded)contacts.push('fan');if(!contacts.length)return `<div class="app-content chat-layout"><aside class="chat-rail"><div class="chat-avatar">陈</div>${icon('chat')}</aside><aside class="chat-list"><div class="chat-search">⌕　搜索</div><p>暂无会话</p></aside><section class="chat-empty">${icon('chat')}<p>暂无新的消息</p></section></div>`;const active=contacts.includes(state.activeChat)?state.activeChat:contacts[0];const zhaoFollowups=[['材料要求','你的通知里写了哪些材料？','落款是 9 月 22 日 09:20，附件栏只列《项目说明》。我没有收到其他材料要求，所以不敢把七月的文件再传一遍。'],['问卷进度','你问卷提交了吗？','还在做。交流区有人说会进入复核，但这类说法没法确认，先只留好自己的回执。'],['接收进度','你看到方向接收进度了吗？','看到了，我在候补第 2 位。页面里是普通的公开展示信息，先别根据名单推断什么。']];const fanFollowups=[['编号','我保留的是 HC23-XLY-B17-042 和 JI-22-014。这两个编号分别是什么？','前一个像材料整理任务号，服务于某一次归档或调用；后一个是主体或教学案例索引。它们可以指向同一人的相关记录，但不能互相替代，更不能把任务号当作人的身份号。'],['资料','你手里有能核对这些编号的资料吗？','我只发我当助管时经手并留存的两页：一份是2023级入学与编号的局部对照，另一份是申请分类字段的脱敏说明。它们只能证明编号用途和分类规则，不能解释这件事的全貌。文件已放入你的“下载与留存”。']];const contactButtons=contacts.map(id=>`<button class="chat-contact ${active===id?'active':''}" data-action="chat-contact" data-contact="${id}"><span class="chat-avatar other">${id==='zhao'?'赵':'范'}</span><span><b>${id==='zhao'?'赵可宁':'范既白'}</b><small>${id==='zhao'?(state.zhaoConversationStarted?'在线':'已添加，暂无消息'):(state.fanMessages.length?'在线':'已添加，暂无消息')}</small></span></button>`).join('');let conversation;if(active==='zhao'){const messages=state.zhaoMessages||[],ready=state.zhaoConversationStarted&&!state.zhaoTyping&&state.zhaoQuestionStage<zhaoFollowups.length;conversation=`<section class="chat-conversation"><header>赵可宁 <small>仅你们可见</small></header><div class="thread-messages">${messages.length?messages.map(m=>`<div class="bubble ${m.side}">${escape(m.text)}</div>`).join(''):'<div class="chat-quiet">你已添加赵可宁。她还没有发来消息。</div>'}${state.zhaoTyping?'<div class="typing-indicator"><i></i><i></i><i></i><span>赵可宁正在输入…</span></div>':''}</div>${ready?`<div class="chat-followups"><span>可继续询问</span><button class="secondary" data-action="zhao-question" data-question="${state.zhaoQuestionStage}">${zhaoFollowups[state.zhaoQuestionStage][1]}</button></div>`:''}<form class="chat-composer" data-zhao-chat><textarea data-zhao-message aria-label="发送给赵可宁的消息" placeholder="输入任意内容，发起一次核对…" ${state.zhaoTyping?'disabled':''}></textarea><button class="primary" ${state.zhaoTyping?'disabled':''}>发送</button></form></section>`;}else{const messages=state.fanMessages||[],ready=messages.length&&!state.fanTyping&&state.fanQuestionStage<fanFollowups.length;conversation=`<section class="chat-conversation"><header>范既白 <small>旧站维护 · 仅你们可见</small></header><div class="thread-messages">${messages.length?messages.map(m=>`<div class="bubble ${m.side}">${escape(m.text)}</div>`).join(''):'<div class="chat-quiet">你已添加范既白。他还没有发来消息。</div>'}${state.fanTyping?'<div class="typing-indicator"><i></i><i></i><i></i><span>范既白正在输入…</span></div>':''}${state.fanFirstPacketReceived?'<div class="chat-file-note"><b>已收到 2 份资料</b><span>请到“文件 / 下载与留存”查看原件。</span><button class="text" data-action="files-folder" data-folder="downloads">打开文件夹</button></div>':''}</div>${ready?`<div class="chat-followups"><span>可继续询问</span><button class="secondary" data-action="fan-question" data-question="${state.fanQuestionStage}">${fanFollowups[state.fanQuestionStage][1]}</button></div>`:''}<form class="chat-composer" data-fan-chat><textarea data-fan-message aria-label="发送给范既白的消息" placeholder="输入任意内容，发起对话…" ${state.fanTyping?'disabled':''}></textarea><button class="primary" ${state.fanTyping?'disabled':''}>发送</button></form></section>`;}return `<div class="app-content chat-layout"><aside class="chat-rail"><div class="chat-avatar">陈</div>${icon('chat')}</aside><aside class="chat-list"><div class="chat-search">⌕　搜索</div>${contactButtons}</aside>${conversation}</div>`;}
-  function memoFindings(){const rows=[];if(!state.submitted)rows.push('新通知：先补交《项目说明》。');if(state.submitted)rows.push('材料已提交；问卷和方向接收进度已开放。');if(state.rankViewed)rows.push('已看过方向接收进度；候补名单已记下。');if(state.assessmentOpened)rows.push('C型后续任务：补充考核与材料复核，文字面试安排在9月23日。');if(state.oldAttachmentOpened)rows.push('任务附件异常：当前清单10:18调用了2023年林知远的旧材料，编号 HC23-XLY-B17-042。');if(state.oldAttachmentSaved)rows.push('旧附件副本已保存；之后网页修订不会覆盖本地留存。');if(state.tangAsked)rows.push('唐敏回复“误调用往届版本”，并替换了当前模板。');if(state.archiveUrlSaved)rows.push(`已保留研究院旧招生归档地址；页脚当前显示维护${state.day>=2?'在线':'离线'}。`);if(state.ncutProjectViewed&&!state.ncutMemorialViewed)rows.push('宁川历史资料：已读 1 / 2。');if(state.ncutProjectViewed&&state.ncutMemorialViewed)rows.push('线索留存：JI-22-014 的外部读取目的写为“招生材料一致性复核”。');if(state.sourceNoticeSent)rows.push('邮箱新增“资料来源复核”通知。');if(state.fanContactOffered)rows.push('旧站维护员说明：HC23-XLY-B17-042 与 JI-22-014 属于不同层级的编号。');if(state.fanAdded)rows.push('已添加旧站维护员范既白；需要由本人先发消息。');if(state.fanFirstPacketReceived)rows.push('范既白提供两份经手留存：入学与编号局部对照、申请分类字段脱敏说明。');return rows.length?`<section class="memo-findings"><span>当前记录</span>${rows.map(row=>`<p>${escape(row)}</p>`).join('')}</section>`:'';}
-  function memoTasks(){const isDayTwo=state.day>=2,items=isDayTwo?dayTwoItems:checklistItems,values=isDayTwo?state.dayTwoChecklist:state.checklist,done=items.filter(([key])=>values[key]).length;return `<section class="memo-checklist" aria-label="待办清单"><div class="memo-list-heading"><div><span class="memo-eyebrow">${isDayTwo?'9月23日':'9月22日'} · 今天</span><h2>${isDayTwo?(state.fanFirstPacketReceived?'先把新收到的两份资料分开核对。':'看看昨天保留的旧站地址。'):(state.sourceNoticeSent?'先把已经发现的资料记下来。':'先把手头的材料弄好。')}</h2></div><span class="memo-count">${done} / ${items.length}</span></div><div class="memo-tasks">${items.map(([key,label])=>`<label class="memo-task ${values[key]?'is-done':''}"><input type="checkbox" data-${isDayTwo?'day-two-':''}checklist="${key}" ${values[key]?'checked':''}><span>${label}</span></label>`).join('')}</div>${memoFindings()}${state.memoEggSeen?`<button class="memo-fold" data-action="memo-egg"><span>夹在清单后面的纸条</span><small>7月10日 · 写给九月的自己</small><span aria-hidden="true">↗</span></button>`:'<p class="memo-tip">完成流程后会自动更新；也可以手动划掉待办。</p>'}</section>`;}
+  function fanProgressPanel(){
+    if(!state.fanFirstPacketReceived)return '';
+    const opened=state.fanSecondPacketOpened||{};
+    const compareReady=opened['fan-interview-original']&&opened['fan-interview-summary'];
+    if(!state.oldAttachmentOpened&&!state.oldAttachmentSaved)return `<section class="chat-investigation"><div class="investigation-title"><span>还缺一处来源核对</span><small>范既白只能按你实际收到过的记录继续查。</small></div><p class="investigation-boundary">先确认材料整理任务号确实出现在“本人任务”曾发送的往届附件中，再回来填写三类编号。</p><button class="secondary" data-action="route" data-route="assessment">打开本人任务附件</button></section>`;
+    if(!state.fanCodesVerified)return `<section class="chat-investigation"><div class="investigation-title"><span>归档关联核对</span><small>请从已收到的两份资料中填写，不区分大小写。</small></div><form data-fan-codes><label>材料整理任务号<input name="material" autocomplete="off" placeholder="HC…" value="${escape(state.fanCodeDraft.material)}"></label><label>主体／教学案例索引<input name="subject" autocomplete="off" placeholder="JI…" value="${escape(state.fanCodeDraft.subject)}"></label><label>当前展示编号<input name="display" autocomplete="off" placeholder="HC…" value="${escape(state.fanCodeDraft.display)}"></label><button class="primary">发送核对结果</button>${state.fanCodeAttempts?'<p class="investigation-hint">三类编号用途不同。请按资料中的完整格式填写，不要把其中两项写成同一个编号。</p>':''}</form></section>`;
+    if(!state.fanComparisonComplete)return `<section class="chat-investigation"><div class="investigation-title"><span>原始记录核对</span><small>${compareReady?'两份对应记录已打开，可以提交差异。':'先到“下载与留存”分别打开原始访谈与整理摘要。'}</small></div>${compareReady?`<form data-fan-compare><label>整理摘要改变了什么？<select name="difference"><option value="">请选择</option><option value="tone">只压缩了语气，意思没有变化</option><option value="refusal">把拒绝与限制改写成已知悉、愿意继续</option><option value="date">只调整了访谈日期</option></select></label><label>这组记录形成在哪个阶段？<select name="stage"><option value="">请选择</option><option value="summer">2023年夏令营期间</option><option value="enrolled">2023年正式入学以后</option><option value="admission">2026年本轮招生期间</option></select></label><button class="primary">提交对照结论</button></form>`:'<button class="secondary" data-action="files-folder" data-folder="downloads">打开下载与留存</button>'}</section>`;
+    if(!state.fanModelIndexReceived)return '';
+    return `<section class="chat-investigation resolved"><div class="investigation-title"><span>${state.fanModelIndexOpened?'单条记录链已核验':'最后一页索引已收到'}</span><small>${state.fanModelIndexOpened?'HC-014 对应的模型完成与投放都晚于真人死亡。':'打开索引，核对主体、原型、模型和展示账号的日期。'}</small></div><button class="${state.fanModelIndexOpened?'secondary':'primary'}" data-action="open-file" data-file="fan-model-handoff">${state.fanModelIndexOpened?'重新打开索引':'打开模型交接索引'}</button>${state.fanModelIndexOpened?'<p class="investigation-boundary">现有资料能确认当前账号并非真人继续活动；死亡原因、批准链和其他展示账号仍没有完成核对。</p>':''}</section>`;
+  }
+  function chatPageV2(){
+    const contacts=[];if(state.zhaoAdded)contacts.push('zhao');if(state.fanAdded)contacts.push('fan');
+    if(!contacts.length)return `<div class="app-content chat-layout"><aside class="chat-rail"><div class="chat-avatar">陈</div>${icon('chat')}</aside><aside class="chat-list"><div class="chat-search">⌕　搜索</div><p>暂无会话</p></aside><section class="chat-empty">${icon('chat')}<p>暂无新的消息</p></section></div>`;
+    const active=contacts.includes(state.activeChat)?state.activeChat:contacts[0];
+    const zhaoFollowups=[['材料要求','你的通知里写了哪些材料？','落款是 9 月 22 日 09:20，附件栏只列《项目说明》。我没有收到其他材料要求，所以不敢把七月的文件再传一遍。'],['问卷进度','你问卷提交了吗？','还在做。交流区有人说会进入复核，但这类说法没法确认，先只留好自己的回执。'],['接收进度','你看到方向接收进度了吗？','看到了，我在候补第 2 位。页面里是普通的公开展示信息，先别根据名单推断什么。']];
+    const fanFollowups=[['编号','我保留的是 HC23-XLY-B17-042 和 JI-22-014。这两个编号分别是什么？','前一个像材料整理任务号，服务于某一次归档或调用；后一个是主体或教学案例索引。它们可以指向同一人的相关记录，但不能互相替代，更不能把任务号当作人的身份号。'],['资料','你手里有能核对这些编号的资料吗？','我只发我当助管时经手并留存的两页：一份是2023级入学与编号的局部对照，另一份是申请分类字段的脱敏说明。它们只能证明编号用途和分类规则，不能解释这件事的全貌。文件已放入你的“下载与留存”。']];
+    const contactButtons=contacts.map(id=>`<button class="chat-contact ${active===id?'active':''}" data-action="chat-contact" data-contact="${id}"><span class="chat-avatar other">${id==='zhao'?'赵':'范'}</span><span><b>${id==='zhao'?'赵可宁':'范既白'}</b><small>${id==='zhao'?(state.zhaoConversationStarted?'在线':'已添加，暂无消息'):(state.fanMessages.length?'在线':'已添加，暂无消息')}</small></span></button>`).join('');
+    let conversation;
+    if(active==='zhao'){
+      const messages=state.zhaoMessages||[],ready=state.zhaoConversationStarted&&!state.zhaoTyping&&state.zhaoQuestionStage<zhaoFollowups.length;
+      conversation=`<section class="chat-conversation"><header>赵可宁 <small>仅你们可见</small></header><div class="thread-messages">${messages.length?messages.map(m=>`<div class="bubble ${m.side}">${escape(m.text)}</div>`).join(''):'<div class="chat-quiet">你已添加赵可宁。她还没有发来消息。</div>'}${state.zhaoTyping?'<div class="typing-indicator"><i></i><i></i><i></i><span>赵可宁正在输入…</span></div>':''}</div>${ready?`<div class="chat-followups"><span>可继续询问</span><button class="secondary" data-action="zhao-question" data-question="${state.zhaoQuestionStage}">${zhaoFollowups[state.zhaoQuestionStage][1]}</button></div>`:''}<form class="chat-composer" data-zhao-chat><textarea data-zhao-message aria-label="发送给赵可宁的消息" placeholder="输入任意内容，发起一次核对…" ${state.zhaoTyping?'disabled':''}></textarea><button class="primary" ${state.zhaoTyping?'disabled':''}>发送</button></form></section>`;
+    }else{
+      const messages=state.fanMessages||[],ready=messages.length&&!state.fanTyping&&state.fanQuestionStage<fanFollowups.length;
+      const packetCount=state.fanModelIndexReceived?7:(state.fanSecondPacketReceived?6:(state.fanFirstPacketReceived?2:0));
+      conversation=`<section class="chat-conversation"><header>范既白 <small>旧站维护 · 仅你们可见</small></header><div class="thread-messages">${messages.length?messages.map(m=>`<div class="bubble ${m.side}">${escape(m.text)}</div>`).join(''):'<div class="chat-quiet">你已添加范既白。他还没有发来消息。</div>'}${state.fanTyping?'<div class="typing-indicator"><i></i><i></i><i></i><span>范既白正在输入…</span></div>':''}${packetCount?`<div class="chat-file-note"><b>已收到 ${packetCount} 份资料</b><span>原件保存在“文件 / 下载与留存”。</span><button class="text" data-action="files-folder" data-folder="downloads">打开文件夹</button></div>`:''}</div>${ready?`<div class="chat-followups"><span>可继续询问</span><button class="secondary" data-action="fan-question" data-question="${state.fanQuestionStage}">${fanFollowups[state.fanQuestionStage][1]}</button></div>`:''}${fanProgressPanel()}<form class="chat-composer" data-fan-chat><textarea data-fan-message aria-label="发送给范既白的消息" placeholder="输入消息…" ${state.fanTyping?'disabled':''}></textarea><button class="primary" ${state.fanTyping?'disabled':''}>发送</button></form></section>`;
+    }
+    return `<div class="app-content chat-layout"><aside class="chat-rail"><div class="chat-avatar">陈</div>${icon('chat')}</aside><aside class="chat-list"><div class="chat-search">⌕　搜索</div>${contactButtons}</aside>${conversation}</div>`;
+  }
+  function memoFindings(){const rows=[];if(!state.submitted)rows.push('新通知：先补交《项目说明》。');if(state.submitted)rows.push('材料已提交；问卷和方向接收进度已开放。');if(state.rankViewed)rows.push('已看过方向接收进度；候补名单已记下。');if(state.assessmentOpened)rows.push('C型后续任务：补充考核与材料复核，文字面试安排在9月23日。');if(state.oldAttachmentOpened)rows.push('任务附件异常：当前清单10:18调用了2023年林知远的旧材料，编号 HC23-XLY-B17-042。');if(state.oldAttachmentSaved)rows.push('旧附件副本已保存；之后网页修订不会覆盖本地留存。');if(state.tangAsked)rows.push('唐敏回复“误调用往届版本”，并替换了当前模板。');if(state.archiveUrlSaved)rows.push(`已保留研究院旧招生归档地址；页脚当前显示维护${state.day>=2?'在线':'离线'}。`);if(state.ncutProjectViewed&&!state.ncutMemorialViewed)rows.push('宁川历史资料：已读 1 / 2。');if(state.ncutProjectViewed&&state.ncutMemorialViewed)rows.push('线索留存：JI-22-014 的外部读取目的写为“招生材料一致性复核”。');if(state.sourceNoticeSent)rows.push('邮箱新增“资料来源复核”通知。');if(state.fanContactOffered)rows.push('旧站维护员说明：HC23-XLY-B17-042 与 JI-22-014 属于不同层级的编号。');if(state.fanAdded)rows.push('已添加旧站维护员范既白；需要由本人先发消息。');if(state.fanFirstPacketReceived)rows.push('范既白提供两份经手留存：入学与编号局部对照、申请分类字段脱敏说明。');if(state.fanSecondPacketReceived)rows.push('三类编号已对应：材料任务 HC23-XLY-B17-042；主体索引 JI-22-014；当前展示 HC-014。');if(state.fanSecondPacketReceived)rows.push('第二批留存出现 R-17：这是林知远正式入学后的培养阶段，不是陈言七月营期。');if(state.fanComparisonComplete)rows.push('对照结果：原始访谈中的拒绝与使用限制，被整理为“已知悉并愿意继续”。');if(state.fanModelIndexOpened)rows.push('模型交接索引：HC-014 映射 MX-24-014；模型完成和前台投放均晚于真人死亡。');return rows.length?`<section class="memo-findings"><span>当前记录</span>${rows.map(row=>`<p>${escape(row)}</p>`).join('')}</section>`:'';}
+  function memoTasks(){const isDayTwo=state.day>=2,items=isDayTwo?dayTwoItems:checklistItems,values=isDayTwo?state.dayTwoChecklist:state.checklist,done=items.filter(([key])=>values[key]).length;let heading='先把手头的材料弄好。';if(isDayTwo){heading=state.fanModelIndexOpened?'把已经确认的记录链保存好。':state.fanComparisonComplete?'核验最后一页模型交接索引。':state.fanSecondPacketReceived?'把原始访谈和整理摘要并排核对。':state.fanFirstPacketReceived?'先分清三种编号分别标记什么。':'看看昨天保留的旧站地址。';}else if(state.sourceNoticeSent)heading='先把已经发现的资料记下来。';return `<section class="memo-checklist" aria-label="待办清单"><div class="memo-list-heading"><div><span class="memo-eyebrow">${isDayTwo?'9月23日':'9月22日'} · 今天</span><h2>${heading}</h2></div><span class="memo-count">${done} / ${items.length}</span></div><div class="memo-tasks">${items.map(([key,label])=>`<label class="memo-task ${values[key]?'is-done':''}"><input type="checkbox" data-${isDayTwo?'day-two-':''}checklist="${key}" ${values[key]?'checked':''}><span>${label}</span></label>`).join('')}</div>${memoFindings()}${state.memoEggSeen?`<button class="memo-fold" data-action="memo-egg"><span>夹在清单后面的纸条</span><small>7月10日 · 写给九月的自己</small><span aria-hidden="true">↗</span></button>`:'<p class="memo-tip">完成流程后会自动更新；也可以手动划掉待办。</p>'}</section>`;}
   function notePage(){return `<div class="notepad-toolbar"><span>备忘录</span><div><button class="text" data-action="export-memo">导出当前备忘录 PDF</button><span id="note-save-status">已保存</span></div></div><div class="memo-layout"><div id="memo-tasks">${memoTasks()}</div><section class="memo-writing"><label for="memo">随手记</label><textarea class="notepad-area" id="memo" aria-label="备忘录正文" spellcheck="false" placeholder="想记下的事情……">${escape(state.note)}</textarea></section></div><div class="notepad-status">仅保存在这台电脑 · 待办勾选与随手记分别保存</div>`;}
   function render(){if(!state.entered){$('#app').innerHTML=home();if(!state.openingClosed&&!$('#dialog-root').innerHTML)opening();return;}
     const appNames={browser:'浏览器',files:'文件',mail:'邮箱',chat:'即时通讯',note:'备忘录'};
     const appIcons={browser:'browser',files:'folder',mail:'mail',chat:'chat',note:'note'};
-    const contents={browser,files:filesPage,mail:mailPage,chat:chatPage,note:notePage};
+    const contents={browser,files:filesPage,mail:mailPage,chat:chatPageV2,note:notePage};
     $('#app').innerHTML=`<div class="desktop"><section class="window" aria-label="${appNames[state.activeApp]}">${state.activeApp!=='browser'?`<header class="window-titlebar"><span class="title-name">${icon(appIcons[state.activeApp])}<span>${appNames[state.activeApp]}</span></span><div class="window-controls" aria-hidden="true"><span>—</span><span>□</span></div></header>`:''}<div class="app-frame" data-app="${state.activeApp}">${contents[state.activeApp]()}</div></section><nav class="taskbar" aria-label="桌面应用"><span class="task-day">陈言的电脑</span>${Object.keys(appNames).map(app=>`<button class="task-app ${state.activeApp===app?'active':''}" data-action="app" data-app="${app}" title="${appNames[app]}" aria-label="${appNames[app]}">${icon(appIcons[app])}<span class="task-label">${appNames[app]}</span>${app==='mail'&&state.submitted&&state.readMails.length<3?'<i class="unread-dot"></i>':''}</button>`).join('')}<button class="task-clock" data-action="calendar" aria-label="日期及本地进度">${state.day>=2?'09:03':(state.submitted?'09:24':'09:12')}<br>2026/09/${state.day>=2?'23':'22'}</button></nav></div>`;
     if(state.activeApp!=='browser')document.querySelectorAll('.title-name svg').forEach(el=>{el.style.width='16px';el.style.height='16px';});
   }
@@ -320,6 +370,12 @@
   function saveCopy(id,name,text){name=name.replace(/\.txt$/i,'.pdf');if(!state.savedFiles.some(f=>f.id===id))state.savedFiles.push({id,name,text,date:'2026/09/22 09:24'});save();toast('已保存至“文件 / 下载与留存”。');}
   function saveTaskAttachment(){const source=taskAttachments[0];if(!state.savedFiles.some(f=>f.id==='saved-old-project-example'))state.savedFiles.push({...source,id:'saved-old-project-example',name:'项目经历填写示例_10时18分留存.pdf',date:'2026/09/22 10:19'});state.oldAttachmentSaved=true;save();toast('10:18版本已保存至“文件 / 下载与留存”。');}
   function receiveFanPacket(){for(const file of fanPacketFiles)if(!state.savedFiles.some(f=>f.id===file.id))state.savedFiles.push({...file});state.fanFirstPacketReceived=true;state.fanSubjectMapSaved=true;state.fanClassificationSaved=true;state.dayTwoChecklist.packet=true;}
+  function receiveFanSecondPacket(){for(const file of fanSecondPacketFiles)if(!state.savedFiles.some(f=>f.id===file.id))state.savedFiles.push({...file});state.fanSecondPacketReceived=true;state.dayTwoChecklist.link=true;}
+  function receiveFanModelIndex(){if(!state.savedFiles.some(f=>f.id===fanModelIndexFile.id))state.savedFiles.push({...fanModelIndexFile});state.fanModelIndexReceived=true;}
+  function markInvestigationFileOpened(id){
+    if(fanSecondPacketFiles.some(file=>file.id===id)){state.fanSecondPacketOpened[id]=true;save();}
+    if(id==='fan-model-handoff'){state.fanModelIndexOpened=true;state.dayTwoChecklist.model=true;save();}
+  }
   const actions={
     'close-dialog':closeDialog,
     enter(){state.entered=true;state.openingClosed=true;state.activeApp='browser';state.tabs=[{history:['home','form'],index:1}];state.activeTab=0;state.step=0;save();render();},
@@ -334,7 +390,7 @@
     'candidate-summary'(el){state.progressCandidate=el.dataset.candidate;save();go('candidateSummary');},
     'open-campus'(el){state.campusKey=el.dataset.campus;state.campusQuery='';save();go('campusHome');},
     'files-folder'(el){state.folder=el.dataset.folder;if(state.folder==='july')state.checklist.july=true;state.activeApp='files';save();render();},
-    'open-file'(el){showFile(el.dataset.file);},
+    'open-file'(el){markInvestigationFileOpened(el.dataset.file);render();showFile(el.dataset.file);},
     'open-assessment-file'(){state.oldAttachmentOpened=true;save();render();showFile('old-project-example');},
     'save-assessment-file'(){saveTaskAttachment();render();},
     'recover-old-example'(){saveTaskAttachment();render();},
@@ -401,6 +457,30 @@
     document.querySelector(`[data-checklist="${key}"]`)?.focus();
     if(reveal){toast('清单翻到最后，露出一张旧纸条。');actions['memo-egg']();}return;
   }if(el.dataset.field){state.form[el.dataset.field]=el.type==='checkbox'?el.checked:el.value;save();}if(el.hasAttribute('data-survey-question')){state.survey.answers[Number(el.dataset.surveyQuestion)]=Number(el.value);state.survey.result='';save();}if(el.hasAttribute('data-recovery')){state.recoveryAnswer=el.value;state.savedAnswer=false;$('.saved-note')?.remove();save();}if(el.hasAttribute('data-identity-conclusion')){state.identityConclusion=el.value;save();}});
+  document.addEventListener('submit',event=>{
+    if(event.target.hasAttribute('data-fan-codes')){
+      event.preventDefault();
+      if(state.fanTyping||state.fanCodesVerified)return;
+      const data=new FormData(event.target),clean=value=>String(value||'').trim().toUpperCase().replace(/\s+/g,'');
+      const material=clean(data.get('material')),subject=clean(data.get('subject')),display=clean(data.get('display'));
+      const wrong=[];
+      if(material!=='HC23-XLY-B17-042')wrong.push('材料整理任务号');
+      if(subject!=='JI-22-014')wrong.push('主体／教学案例索引');
+      if(display!=='HC-014')wrong.push('当前展示编号');
+      if(wrong.length){state.fanCodeAttempts+=1;state.fanCodeDraft={material,subject,display};save();render();toast(`仍需核对：${wrong.join('、')}。`);return;}
+      state.fanCodesVerified=true;state.fanCodeDraft={material:'',subject:'',display:''};state.fanMessages.push({side:'mine',text:'核对结果：HC23-XLY-B17-042 是材料整理任务号，JI-22-014 是主体索引，HC-014 是当前展示编号。'});state.fanTyping=true;receiveFanSecondPacket();save();render();
+      setTimeout(()=>{state.fanMessages.push({side:'other',text:'三项用途对上了。我再发四页：培养分组、同一次访谈的原始转写和整理摘要，以及一页入学后任务规则。先逐页看，不要把R-17套到你七月的行程上。'});state.fanTyping=false;save();render();toast('收到第二批历史留存。');},1050);return;
+    }
+    if(event.target.hasAttribute('data-fan-compare')){
+      event.preventDefault();
+      if(state.fanTyping||state.fanComparisonComplete)return;
+      const data=new FormData(event.target),difference=data.get('difference'),stage=data.get('stage');
+      if(difference!=='refusal'){toast('再对照原始转写中“不同意”“先停下来”和整理摘要的流转结论。');return;}
+      if(stage!=='enrolled'){toast('请核对培养分组记录中的入学状态和分组生效日期。');return;}
+      state.fanComparisonComplete=true;state.dayTwoChecklist.compare=true;state.fanMessages.push({side:'mine',text:'原始访谈拒绝让生成结果代表本人，并要求暂停对照；整理摘要却写成已知悉、愿意继续。这些记录形成于正式入学以后。'});state.fanTyping=true;save();render();
+      setTimeout(()=>{state.fanMessages.push({side:'other',text:'对。那不是语气压缩，是把限制条件改成了继续执行。我经手的目录还引用过一页 MX-24-014，只能看到单条主体链和时间。我把这一页也给你。'});receiveFanModelIndex();state.fanTyping=false;save();render();toast('模型交接索引已保存。');},1150);return;
+    }
+  });
   document.addEventListener('submit',event=>{if(event.target.hasAttribute('data-zhao-chat')){event.preventDefault();const input=event.target.querySelector('[data-zhao-message]');const message=(input?.value||'').trim();if(!message){toast('输入任意一句话即可发起核对。');return;}if(state.zhaoTyping)return;state.zhaoMessages.push({side:'mine',text:message});state.zhaoConversationStarted=true;state.zhaoTyping=true;save();render();setTimeout(()=>{state.zhaoMessages.push({side:'other',text:'我在。先只核对日期和文件名，不传完整材料；这样至少不会把彼此的申请信息留在交流区。'});state.zhaoTyping=false;save();render();},950);return;}if(event.target.hasAttribute('data-fan-chat')){event.preventDefault();const input=event.target.querySelector('[data-fan-message]');const message=(input?.value||'').trim();if(!message){toast('输入任意一句话即可发起核对。');return;}if(state.fanTyping)return;state.fanMessages.push({side:'mine',text:message});state.fanTyping=true;save();render();setTimeout(()=>{state.fanMessages.push({side:'other',text:state.fanMessages.length<=1?'我看到你从旧站留言过来的。先把你保留的两个编号发来，不要补充身份证号或联系方式；我只能核对自己经手过的归档。':'我还在。现阶段我只能核对自己经手的归档和脱敏字段，其他内容需要等记录对上以后再说。'});state.fanTyping=false;save();render();},1000);return;}if(event.target.hasAttribute('data-campus-access')){event.preventDefault();actions['campus-access']();return;}if(event.target.hasAttribute('data-ncut-form')||event.target.hasAttribute('data-campus-form')){event.preventDefault();const query=(event.target.querySelector('[data-campus-search],[data-ncut-search]')?.value||'').trim();state.campusQuery=query;if(state.campusKey==='ningchuan')state.ncutQuery=query;save();go('campusSearch');return;}if(event.target.id!=='address-form')return;event.preventDefault();const value=$('#address').value.trim().replace(/\/$/,'');const campusMatch=Object.entries(campuses).find(([,c])=>value===c.name||value.includes(c.domain));if(campusMatch){state.campusKey=campusMatch[0];state.campusQuery='';if(campusMatch[0]==='ningchuan')state.ncutQuery='';save();go('campusHome');return;}const route=Object.entries(paths).find(([,path])=>path&&path.replace(/\/$/,'')===value);if(route){if(['rank','questionnaire'].includes(route[0])&&!state.submitted){toast('请先完成本人材料补充。');return;}go(route[0]);}else{toast('未找到该地址，请核对已经获得的完整网址。');}});
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&$('#dialog-root').innerHTML)closeDialog();if(event.key==='Tab'&&$('#dialog-root').innerHTML){const focusable=[...$('#dialog-root').querySelectorAll('button:not([disabled]),input,select,textarea,a[href]')];const first=focusable[0],last=focusable.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}});
   render();
