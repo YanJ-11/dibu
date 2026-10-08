@@ -2,6 +2,34 @@
 (() => {
   'use strict';
   const KEY = 'dibu-preview-v21-1';
+  const PROGRESS_IDLE_MS = 60 * 60 * 1000;
+  const PROGRESS_SESSION_KEY = KEY + '-session';
+  let playSessionId = '', sessionReplacedNoticeShown = false;
+  function readPlaySession(){
+    try{return JSON.parse(localStorage.getItem(PROGRESS_SESSION_KEY) || 'null');}
+    catch{return null;}
+  }
+  function startPlaySession(forceFresh=false){
+    const now=Date.now(), previous=readPlaySession();
+    // Old saves without a timestamp cannot safely qualify for short-term resumption.
+    const resumable=!forceFresh&&typeof previous?.id==='string'&&previous.id.length>0&&
+      Number.isFinite(previous.lastSeenAt)&&previous.lastSeenAt<=now&&
+      now-previous.lastSeenAt<PROGRESS_IDLE_MS;
+    playSessionId=resumable?previous.id:'play-'+now+'-'+Math.random().toString(36).slice(2);
+    sessionReplacedNoticeShown=false;
+    try{
+      if(!resumable)localStorage.removeItem(KEY);
+      localStorage.setItem(PROGRESS_SESSION_KEY,JSON.stringify({id:playSessionId,lastSeenAt:now}));
+    }catch{}
+  }
+  function touchPlaySession(){
+    // An older tab must not resurrect a session reset or expired by another tab.
+    try{
+      if(JSON.parse(localStorage.getItem(PROGRESS_SESSION_KEY) || 'null')?.id!==playSessionId)return false;
+      localStorage.setItem(PROGRESS_SESSION_KEY,JSON.stringify({id:playSessionId,lastSeenAt:Date.now()}));
+    }catch{/* save() reports unavailable browser storage when writing progress. */}
+    return true;
+  }
   const $ = (selector) => document.querySelector(selector);
   const escape = (value = '') => String(value).replaceAll('HC23-XLY-B17-042','HC-LZY-2023-ZL-042').replaceAll('JI-22-014','HC-LZY-ZT-014').replaceAll('PR-JI-22-014','PR-HC-LZY-ZT-014').replaceAll('真人死亡','“3·18”事故').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const MATERIAL_CODE='HC-LZY-2023-ZL-042', SUBJECT_CODE='HC-LZY-ZT-014';
@@ -30,12 +58,11 @@
     fanSecondPacketReceived:false, fanSecondPacketOpened:{}, fanComparisonPrompted:false, fanComparisonComplete:false,
     fanModelIndexReceived:false, fanModelIndexOpened:false, fanResponsibilityChecked:false, fanCompareMarks:{pause:false,reuse:false,attribution:false,neutral:false}, fanMarkedFragments:{}, interviewSelectedFragment:'', interviewAnnotations:{}
   };
-  // A shared preview link can always start from the authored opening without
-  // changing the normal site's saved-progress behavior.
+  // Short-term progress is local to this browser; explicit fresh links also reset it.
   const previewParams=new URLSearchParams(location.search);
   const freshPreview=previewParams.get('fresh')==='1';
   const fanPreview=previewParams.get('start')==='fan';
-  if(freshPreview){try{localStorage.removeItem(KEY);}catch{}}
+  startPlaySession(freshPreview);
   let state, loadedState;
   try { loadedState = JSON.parse(localStorage.getItem(KEY) || 'null'); state = loadedState ? {...defaultState,...loadedState,form:{...defaultState.form,...loadedState.form},checklist:{...defaultState.checklist,...loadedState.checklist},dayOneChecklist:{...defaultState.dayOneChecklist,...loadedState.dayOneChecklist},sourceClassification:{...defaultState.sourceClassification,...loadedState.sourceClassification},versionMarks:{...defaultState.versionMarks,...loadedState.versionMarks},dayTwoChecklist:{...defaultState.dayTwoChecklist,...loadedState.dayTwoChecklist},survey:{...defaultState.survey,...loadedState.survey,answers:Array.isArray(loadedState.survey?.answers)?loadedState.survey.answers.slice(0,10).concat(Array(10).fill(0)).slice(0,10):Array(10).fill(0)}} : structuredClone(defaultState); }
   catch { state = JSON.parse(JSON.stringify(defaultState)); }
@@ -141,7 +168,13 @@
   const dayOneItems=[...checklistItems];
   const dayTwoItems=[['archive','查看旧站维护窗口'],['contact','添加旧站维护员'],['packet','核对第一批留存资料'],['link','按编号取得第二批资料'],['compare','比对原始访谈与整理摘要'],['model','核验模型交接索引'],['responsibility','追问资料整理与异常上报责任']];
   const dayThreeItems=[['review','核对本人申请与考核状态'],['offer','查看拟接收意向'],['allocation','核对入学后预排'],['copy','保存本人接收材料'],['transfer','核实历史上报的留存去向'],['archive','查阅已转交的归档材料'],['flow','留存流转顺序与预排字段核对'],['fields','取得本人字段核对回复'],['current','查阅当期分配与版本来源'],['mapping','核对当期依据和展示主体关联'],['critical','核对事故前续卷'],['report','保存独立来件登记'],['measures','核验实际暂停与保全反馈'],['decision','办理本人最终意向']];
-  function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch{toast('浏览器未允许本地保存，请保持此页面打开。');}}
+  function save(){try{
+    if(!touchPlaySession()){
+      if(!sessionReplacedNoticeShown){sessionReplacedNoticeShown=true;toast('此试玩已在另一页面重新开始，请刷新当前页面。');}
+      return;
+    }
+    localStorage.setItem(KEY,JSON.stringify(state));
+  }catch{toast('浏览器未允许本地保存，请保持此页面打开。');}}
   function deliverMail(id,{silent=false}={}){
     if(!state.deliveredMails.includes(id))state.deliveredMails.push(id);
     if(!silent&&!state.notifiedMails.includes(id)){
@@ -958,7 +991,7 @@
     'restore-session'(){go('form');},
     calendar(){const date=state.day>=3?'24':state.day>=2?'23':'22',weekday=state.day>=3?'四':state.day>=2?'三':'二';modal(`<h2>2026年9月${date}日 · 星期${weekday}</h2><p class="form-text">当前进度已保存在这台电脑的浏览器中。<br>关闭页面后可继续。</p><div class="dialog-actions"><button class="secondary" data-action="reset-prompt">重新开始本段</button><button class="primary" data-action="close-dialog">返回</button></div>`,'','本地进度');},
     'reset-prompt'(){modal('<h2>重新开始本段</h2><p class="form-text">这会清除本浏览器中本段的申请草稿、提交进度、备忘录与留存副本。</p><div class="dialog-actions"><button class="secondary" data-action="close-dialog">取消</button><button class="primary" data-action="reset">确认重新开始</button></div>','','重新开始确认');},
-    reset(){state=JSON.parse(JSON.stringify(defaultState));try{localStorage.removeItem(KEY);}catch{}$('#dialog-root').innerHTML='';render();}
+    reset(){state=JSON.parse(JSON.stringify(defaultState));startPlaySession(true);$('#dialog-root').innerHTML='';render();}
   };
 
   Object.assign(actions,{
@@ -1073,5 +1106,15 @@
 
   if(fanPreview)save();
   if(state.interviewReplyPending)finishInterviewFollowup();
+  // Keep an open play session alive even when the player spends time reading a PDF.
+  // Expiration is checked on the next opening, never by resetting an active game.
+  setInterval(touchPlaySession,30000);
+  window.addEventListener('pagehide',touchPlaySession);
+  window.addEventListener('pageshow',event=>{
+    // Back/forward cache restores frozen JS; reload to apply the same expiry rule.
+    if(event.persisted){location.reload();return;}
+    touchPlaySession();
+  });
+  document.addEventListener('visibilitychange',()=>{touchPlaySession();});
   render();
 })();
