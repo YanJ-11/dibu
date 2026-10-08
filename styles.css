@@ -66,3 +66,32 @@
 .compare-followup{display:flex;align-items:center;justify-content:space-between;gap:17px;margin-top:14px;padding:14px 17px;border:1px solid #cce2d3;background:#f2faf4;color:#52745f;font-size:12px;line-height:1.7}
 .compare-followup p{margin:0}
 @media(max-width:760px){.interview-file-grid{grid-template-columns:1fr}.compare-save-row,.compare-followup{align-items:stretch;flex-direction:column}.compare-save-row button,.compare-followup button{width:100%}.interview-fragment{display:block}.interview-fragment small{display:block;margin-top:5px}.interview-compare-toolbar>span{flex-basis:100%;min-width:0}}
+
+/* Complete PDF pages, with a selectable layer extracted from each original. */
+.system-inner.compare-workbench{max-width:none;padding:24px 28px}
+.interview-document header{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:76px;padding:12px 16px}
+.interview-document header>div{min-width:0}
+.interview-document header a{flex-shrink:0;font-size:11px;white-space:nowrap}
+.interview-reader{height:clamp(460px,65vh,860px);overflow:auto;background:#e5e9ed;padding:16px;overscroll-behavior:contain;scrollbar-gutter:stable;outline-offset:-3px}
+.interview-pdf-page{position:relative;container-type:inline-size;width:100%;margin:0 0 15px;background:white;box-shadow:0 2px 9px #182c3e22}
+.interview-pdf-page>img{display:block;width:100%;height:100%;user-select:none;pointer-events:none}
+.interview-text-layer{position:absolute;inset:0;cursor:text;user-select:text;-webkit-user-select:text;color:transparent}
+.pdf-letter{position:absolute;display:block;white-space:pre;line-height:1;font-family:SimSun,serif;color:transparent;user-select:text;-webkit-user-select:text}
+.pdf-letter::selection{background:#6fafff88;color:transparent}
+.pdf-letter.annotation-highlight{background:#ffe45970;box-shadow:0 1px 0 #efc63480}
+.pdf-letter.annotation-bold{color:#172c38;font-weight:900;text-shadow:.3px 0 currentColor,-.3px 0 currentColor}
+.reader-page-count{text-align:center;color:#697984;font-size:11px;margin:10px 0}
+.reader-zoom{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:7px 12px;background:#f4f6f8;border-bottom:1px solid #dce5ea;font-size:11px;color:#647786}
+.reader-zoom button{min-width:30px;min-height:28px;padding:2px 8px}
+.interview-compare-toolbar{margin:14px 0}
+@media(max-width:760px){.system-inner.compare-workbench{padding:16px}.interview-reader{height:60vh}.interview-document header{flex-wrap:wrap}.interview-file-grid{gap:20px}}
+.compare-viewer{background:#f4f6f8;min-height:100%;color:#405664}
+.compare-viewer .compare-workbench{padding-top:16px}
+.compare-viewer .source-desk-head{margin:10px 0;align-items:center}
+.compare-viewer .page-title{margin:0 0 7px;font-size:20px}
+.compare-viewer .source-desk-head p{margin:0}
+.compare-viewer .interview-reader{height:clamp(300px,calc(100vh - 355px),820px)}
+.compare-viewer .interview-file-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.compare-viewer .interview-compare-toolbar{position:sticky;top:0;z-index:5}
+.compare-viewer .interview-compare-toolbar>span{flex:1 1 200px;min-width:0}
+@media(max-width:560px){.compare-viewer .interview-file-grid{grid-template-columns:1fr}.compare-viewer .interview-reader{height:60vh}}

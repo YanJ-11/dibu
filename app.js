@@ -26,7 +26,7 @@
     fanAdded:false, activeChat:'zhao', fanMessages:[], fanTyping:false, fanQuestionStage:0, fanContext:'', fanFirstPacketReceived:false,
     fanSubjectMapSaved:false, fanClassificationSaved:false, fanCodesVerified:false, fanCodeAttempts:0, fanCodeDraft:{material:'',subject:'',display:''},
     fanSecondPacketReceived:false, fanSecondPacketOpened:{}, fanComparisonPrompted:false, fanComparisonComplete:false,
-    fanModelIndexReceived:false, fanModelIndexOpened:false, fanResponsibilityChecked:false, fanCompareMarks:{pause:false,reuse:false,attribution:false,neutral:false}, fanMarkedFragments:{}, interviewSelectedFragment:''
+    fanModelIndexReceived:false, fanModelIndexOpened:false, fanResponsibilityChecked:false, fanCompareMarks:{pause:false,reuse:false,attribution:false,neutral:false}, fanMarkedFragments:{}, interviewSelectedFragment:'', interviewAnnotations:{}
   };
   // A shared preview link can always start from the authored opening without
   // changing the normal site's saved-progress behavior.
@@ -119,7 +119,7 @@
       fanWindowOpen:false,fanArchiveTyping:false,fanArchiveStage:2,fanContactOffered:true,fanAdded:true,activeChat:'fan',
       fanMessages:[],fanTyping:false,fanQuestionStage:0,fanContext:'',fanFirstPacketReceived:false,fanSubjectMapSaved:false,
       fanClassificationSaved:false,fanCodesVerified:false,fanSecondPacketReceived:false,fanSecondPacketOpened:{},
-      fanComparisonPrompted:false,fanComparisonComplete:false,fanModelIndexReceived:false,fanModelIndexOpened:false,
+      interviewReplyPending:false,interviewAnnotations:{},fanComparisonPrompted:false,fanComparisonComplete:false,fanModelIndexReceived:false,fanModelIndexOpened:false,
       tabs:[{id:'tab-1',history:['oldArchive'],index:0}],nextTabId:2,activeTab:0,
       deliveredMails:['invitation','submitted','forum','attachmentReply'],notifiedMails:['invitation','submitted','forum','attachmentReply'],
       readMails:['invitation','submitted','forum','attachmentReply'],notificationQueue:[]
@@ -243,64 +243,11 @@
     }
   ]
 };
-  Object.assign(window.DIBU_DOCUMENTS['ningchuan-memorial'],{
-    pdf:'assets/documents/ningchuan-memorial.pdf?v=incident20240318',pages:['assets/previews/ningchuan-memorial-1.png?v=incident20240318'],size:'134 KB',
-    text:`宁川理工大学
-信息公开办公室 / 正式附件
-关于“3·18”重大事故的处理方案及有关情况说明
-首次正式发布：2024年3月22日
-事故发生：2024年3月18日；调查材料归档：2024年4月3日前
-自动调度与设施控制权限超过合理范围，系统在异常状态下作出错误决策；人工接管与异常处置亦存在明显缺口。
-本次事故遇难人员
-赵清河 / 实验设施工程师 / 遇难
-林知远 / 自动化相关专业学生 / 遇难 / ${SUBJECT_CODE}
-周敏仪 / 联合项目研究助理 / 遇难
-郭承安 / 设施运维人员 / 遇难
-吴柏川 / 合作单位技术员 / 遇难
-受伤、撤离与后续接受询问人员另册登记，不并入本表。
-模型完成：2024年8月17日；前台展示：2026年。
-宁川理工大学信息公开 / 事故处理附件 / 1 / 1`
-  });
-  for(const id of ['old-project-example','fan-subject-map','fan-training-group','fan-interview-original','fan-interview-summary','fan-model-handoff'])Object.assign(window.DIBU_DOCUMENTS[id],{pdf:`assets/documents/${id}.pdf?v=keywords-r4`,pages:[`assets/previews/${id}-1.png?v=keywords-r4`]});
   for(const entry of Object.values(window.DIBU_DOCUMENTS||{}))if(entry&&entry.text)entry.text=legacyCode(entry.text);
   for(const group of Object.values(files))for(const file of group){
     const asset=window.DIBU_DOCUMENTS[file.id];
     if(asset){Object.assign(file,asset);file.name=file.name.replace(/\.txt$/i,'.pdf');}
   }
-  Object.assign(window.DIBU_DOCUMENTS['fan-interview-original'],{
-    pdf:'assets/documents/fan-interview-original.pdf?v=keywords-r4',
-    pages:['assets/previews/fan-interview-original-1.png?v=keywords-r4'],
-    size:'288 KB',
-    text:`衡川大学
-先进系统研究院 / 培养过程记录
-记录号：LZY_2023_FT_06
-第六次阶段访谈原始转写
-录音转写校对件 · 2023年11月2日
-记录对象
- 林知远 / HC-LZY-ZT-014
-记录阶段
-入学后 · R-17 / 2023-4B
-访谈人员
-S.H.
-转写状态
-原始语序保留；未作结论归纳
-转写节录
-访谈人员：“我们再确认一遍。系统给出的补全答案和你刚才的回答不一致，下一轮还继续吗？”
-林知远：“课程任务我可以继续。可对照先停止一下，我要知道上一次改了什么。”
-访谈人员：“历史项目材料可以补全你没有表达清楚的部分。”
-林知远：“等等，我没说可以用。那是教学项目的留存。”
-访谈人员：“系统记录显示你已经知悉材料会用于任务更新。”
-林知远：“我知悉的是教学复盘，不是让它替我回答。你有没有把这句记下来？”
-访谈人员：“请先回答是否继续下一轮。”
-林知远：“我刚才已经回答了。课程继续，对照暂停。这是两件事。”
-访谈人员：“如果统一说明认为两者属于同一流程——”
-林知远：“那也不是我的回答。你们一直让我改，我说的哪一句记下来了？”
-访谈人员：“请先听完问题。”
-林知远：“我在听。可你没有回答我。别再把生成的东西写成我同意。我不同意，听清了吗？”
-校对备注：对象同意继续正常课程任务；对“对照任务继续”“历史材料再利用”及“生成结果代表本人”均明确保留或拒绝。
-培养过程记录 / 原始转写节录
-1 / 1`
-  });
   const taskAttachments=[Object.assign({id:'old-project-example',name:'项目经历填写示例.pdf',date:'2026/09/22 10:18',servedAt:'2026年9月22日 10:18',recordDate:'2023年7月16日',recordNo:MATERIAL_CODE},window.DIBU_DOCUMENTS['old-project-example']||{})];
   const fanPacketFiles=[
     Object.assign({id:'fan-subject-map',name:'LZY_2023_BH_01.pdf',date:'2026/09/23 09:02'},window.DIBU_DOCUMENTS['fan-subject-map']||{}),
@@ -410,7 +357,7 @@ S.H.
   function status(){return shell(`<div class="system-inner">${crumb('申请状态查询')}<h2 class="page-title">本人申请状态</h2>${state.submitted?`<div class="inline-success">材料确认已完成，已收到本轮申请。</div>${row('姓名','陈言')}${row('报名号','HC2026-0922-071')}${row('申请状态','材料已提交，等待后续考核')}${row('回执编号','RC-0922-071')}${row('提交时间','2026年9月22日 09:18')}${row('专业排名比例',escape(state.form.rank)+'%')}${row('申请方向',escape(state.form.program))}${row('营期批次',escape(state.form.camp))}${row('成绩及排名证明',escape(findFile(state.form.file)?.name||''),'本轮实际提交附件')}<div class="form-actions"><button class="secondary" data-action="save-receipt">保存提交回执</button></div><div class="task-card"><h3>后续安排已发送</h3><p>候补进度查询路径及补充考核后续安排已发送至本人登记邮箱。请自行查收。</p><button class="primary" data-action="app" data-app="mail">打开邮箱</button></div>`:'<div class="info-note">当前申请尚未提交。完成材料核对后，请在“申请信息提交”中确认提交。</div><button class="primary" data-action="route" data-route="form">继续填写</button>'}</div>`);}
   function result(){return shell(`<div class="system-inner">${crumb('申请结果查询')}<h2 class="page-title">申请结果</h2><div class="info-note">暂无接收结果。正式结果以学校发布的拟接收意向及后续审核通知为准。</div>${row('申请人','陈言')}${row('本轮状态',state.submitted?'材料已补充，等待后续安排':'申请材料待补充')}${row('拟接收结果','尚未发布')}</div>`);}
   const surveyQuestions=['任务尚未达到我预期的结果时，即使已经到了原定结束时间，我也很难停下来休息。','当别人进度明显领先时，我通常仍能按照自己的节奏安排任务，不急于追赶。','在同一项任务中连续落后，会让我更想立刻再试一次，直到改变结果。','只要结果已经足够满足自己的目标，我可以接受它不是参与者中最好的。','面对一套持续比我表现更好的系统，我愿意先按它设定的目标调整做法，再判断这个目标是否适合自己。','当评估记录与我的判断相冲突时，我愿意暂时保留分歧，即使这会拖慢下一步安排。','如果一种修正能持续提高我的评分，即使暂时说不清原因，我也愿意先采用它。','即使权威评估认为有必要，我也不愿让对方替我确定“我当时是怎样想的”。','如果我对衡川招生安排的理解与研究院统一说明不同，为了继续申请，我愿意先按统一说明修正自己的判断，再处理原有疑问。','如果获得衡川的补充接收机会需要多轮材料补充与面试复核，并按照招生系统的反馈不断调整回答，我愿意继续，直到系统确认符合要求。'];
-  function questionnaire(){if(!state.submitted)return status();const s=state.survey;const options=['非常不同意','比较不同意','不确定／视情况','比较同意','非常同意'];const outcome={A:['A类','你倾向在竞争中主动推进，同时保留自己的判断标准。','常规复核；可以修改答案后重新提交。'],B:['B类','你倾向维持自身节奏，或降低持续竞争中的投入。','常规复核；可以修改答案后重新提交。'],C:['C类匹配','可进入后续安排。','补充考核入口已开放。']}[s.result];return shell(`<div class="system-inner questionnaire-page">${crumb('申请人情况与学习习惯问卷')}<h2 class="page-title">申请人情况与学习习惯问卷</h2><p class="small muted">请根据陈言在故事中的学习与申请习惯作答。提交后可查看后续安排；这不是对现实玩家的心理判断。</p>${s.result?`<div class="inline-success"><b>本次分类：${outcome[0]}。</b><br>${outcome[1]}<br>后续安排：${outcome[2]}<p class="small muted">已保存第 ${s.versions} 版回执。修改并重新提交会保留此前版本。</p>${s.result==='C'?'<button class="primary survey-next" data-action="route" data-route="assessment">进入补充考核与材料复核</button>':''}</div>`:''}<section class="survey-list">${surveyQuestions.map((q,i)=>`<fieldset class="survey-item"><legend><b>${i+1}.</b> ${q}</legend><div>${options.map((label,index)=>`<label><input type="radio" name="survey-${i}" value="${index+1}" data-survey-question="${i}" ${Number(s.answers[i])===index+1?'checked':''}>${index+1} · ${label}</label>`).join('')}</div></fieldset>`).join('')}</section><div class="form-actions"><button class="secondary" data-action="save-survey">保存草稿</button><button class="primary" data-action="submit-survey">提交问卷</button></div></div>`);}
+  function questionnaire(){if(!state.submitted)return status();const s=state.survey;const options=['非常不同意','比较不同意','不确定／视情况','比较同意','非常同意'];const outcome={A:['A类','你倾向在竞争中主动推进，同时保留自己的判断标准。','常规复核；可以修改答案后重新提交。'],B:['B类','你倾向维持自身节奏，或降低持续竞争中的投入。','常规复核；可以修改答案后重新提交。'],C:['C类匹配','可进入后续安排。','补充考核入口已开放。']}[s.result];return shell(`<div class="system-inner questionnaire-page">${crumb('申请人情况与学习习惯问卷')}<h2 class="page-title">申请人情况与学习习惯问卷</h2><p class="small muted">请根据本人近期的学习与申请情况作答。问卷随申请材料一并留存，提交后可查看后续安排。</p>${s.result?`<div class="inline-success"><b>本次分类：${outcome[0]}。</b><br>${outcome[1]}<br>后续安排：${outcome[2]}<p class="small muted">已保存第 ${s.versions} 版回执。修改并重新提交会保留此前版本。</p>${s.result==='C'?'<button class="primary survey-next" data-action="route" data-route="assessment">进入补充考核与材料复核</button>':''}</div>`:''}<section class="survey-list">${surveyQuestions.map((q,i)=>`<fieldset class="survey-item"><legend><b>${i+1}.</b> ${q}</legend><div>${options.map((label,index)=>`<label><input type="radio" name="survey-${i}" value="${index+1}" data-survey-question="${i}" ${Number(s.answers[i])===index+1?'checked':''}>${index+1} · ${label}</label>`).join('')}</div></fieldset>`).join('')}</section><div class="form-actions"><button class="secondary" data-action="save-survey">保存草稿</button><button class="primary" data-action="submit-survey">提交问卷</button></div></div>`);}
   function assessment(){if(state.survey.result!=='C')return questionnaire();const old=taskAttachments[0],liveCorrected=state.oldAttachmentCorrected;return shell(`<div class="system-inner assessment-page">${crumb('补充考核与材料复核')}<div class="assessment-heading"><div><p class="campus-kicker">本人任务 · MR-0922-071</p><h2 class="page-title">补充考核与材料复核</h2><p>资格核验已完成。请阅读材料模板并准备文字面试；本页不改变当前候补顺位。</p></div><span class="assessment-status">进行中</span></div><div class="assessment-grid"><section class="assessment-card"><span>01</span><h3>资格核验</h3><b class="status-ok">已完成</b><p>推免资格、在读状态与本轮申请材料已经核对。</p></section><section class="assessment-card"><span>02</span><h3>项目经历补述</h3><b>待确认</b><p>请按模板区分本人工作、小组成果与未完成内容。</p></section><section class="assessment-card"><span>03</span><h3>文字面试</h3><b>已安排</b><p>2026年9月23日 09:30—09:50，入口将在开始前开放。</p></section></div><section class="attachment-panel"><div class="attachment-head"><div><h3>任务附件</h3><p>文件清单更新时间：2026年9月22日 10:18</p></div><span>${liveCorrected?'2 个文件 · 已修订':'2 个文件'}</span></div><div class="attachment-row"><div class="file-symbol">PDF</div><div><b>${liveCorrected?'项目经历填写模板（通用版）.pdf':escape(old.name)}</b><small>${liveCorrected?'当前版本 · 2026/09/22 10:21':`当前任务调用 · ${old.servedAt}`}</small></div><div class="attachment-buttons">${liveCorrected?'<button class="secondary" data-action="generic-template">打开</button>':`<button class="primary" data-action="open-assessment-file">打开附件</button>${state.oldAttachmentOpened?`<button class="secondary" data-action="save-assessment-file">${state.oldAttachmentSaved?'已保存副本':'保存副本'}</button>`:''}`}</div></div><div class="attachment-row"><div class="file-symbol doc">DOC</div><div><b>项目经历补述空白表.docx</b><small>2027级推免补充考核通用模板</small></div><button class="secondary" data-action="blank-template">预览</button></div>${liveCorrected?`<div class="version-record"><div><b>本人任务附件版本记录</b><p>10:18 向本任务发送过“项目经历填写示例.pdf”；10:21 经办人员替换为通用版。</p></div><button class="text" data-action="recover-old-example">取回10:18版本</button></div>`:''}</section>${state.oldAttachmentOpened&&!state.tangAsked?'<div class="inquiry-box"><div><h3>附件内容与本任务不一致？</h3><p>可向材料复核经办人唐敏提交附件名称、旧材料编号和页面时间。请勿转发他人的完整材料。</p></div><button class="secondary" data-action="ask-tang">向唐敏询问</button></div>':''}${state.tangInquiryPending?'<div class="loading-line"><i></i><span>正在提交附件核对请求…</span></div>':''}${state.tangAsked?'<div class="inline-success"><b>附件核对请求已受理。</b><br>经办人已更换当前模板；回复已发送至本人邮箱。已保存的旧副本不会被替换。</div>':''}<section class="interview-note"><h3>文字面试说明</h3><ol><li>围绕本人承担的项目工作进行补述，不要求披露他人完整材料。</li><li>回答将作为本轮招生复核材料留存；面试开始前仍可检查本人任务附件。</li><li>面试入口将在预约时段开放，错过后可在当日申请一次改期。</li></ol></section></div>`);}
   function canEndDayOne(){return state.submitted&&state.rankViewed&&!!state.survey.result&&state.ncutProjectViewed&&state.ncutMemorialViewed&&state.archiveUrlSaved;}
   function canOpenSourceDesk(){return state.day>=2&&state.fanFirstPacketReceived;}
@@ -446,11 +393,12 @@ S.H.
   function identityCheckV3(){return identityCheck().replaceAll('宁川理工大学学院公告','宁川理工大学事故处理说明').replaceAll('当前展示资料与已故者的院校、项目经历及职责对应','当前展示资料与事故附件中林知远的院校、项目经历及职责对应');}
   function login(){return shell(`<section class="login-hero"><div class="campus-art" aria-hidden="true"></div><div class="login-card"><h1>欢迎报考衡川大学</h1><label class="hidden" for="login-project">招生项目</label><select id="login-project"><option>推免生预报名</option><option>硕士研究生招生</option><option>博士研究生招生</option></select><div class="login-help"><b>用户名：报名号；密码：注册时填写的密码。</b><br>请通过推免生预报名系统申请，并如实核对信息。当前电脑已保留本人申请会话。</div><input aria-label="用户名" value="HC2026-0922-071" readonly><input aria-label="密码" type="password" value="retained-session" readonly><button class="primary" data-action="restore-session">恢复当前申请会话</button><div class="login-links"><span>已识别本人邮件链接</span><span>本地会话</span></div></div></section><div class="dashboard"><h2>通知公告</h2><p class="small muted">2027 年研究生招生补充材料确认工作已开始。</p></div>`,true);}
   function dayThreeReview(){const files=state.savedFiles.filter(file=>['fan-subject-map','fan-classification','fan-training-group','fan-interview-original','fan-interview-summary','fan-task-rules','fan-model-handoff'].includes(file.id));return shell(`<div class="system-inner review-page">${crumb('接收安排核对')}<div class="assessment-heading"><div><p class="campus-kicker">2027级推免接收工作 · 材料核对</p><h2 class="page-title">接收安排核对</h2><p>昨日取得的留存材料已进入本地“下载与留存”。请先确认文件没有缺页，再由招生办公室生成本人接收意向。</p></div><span class="assessment-status">${state.dayThreeReviewSubmitted?'已提交':'待确认'}</span></div><section class="task-card"><h3>9月23日资料留存</h3><p>系统检测到 ${files.length || 7} 份来自范既白的文件。这里仅确认留存完整，不改变任何招生结果。</p><ul class="review-list">${files.length?files.map(file=>`<li><span>${escape(file.name)}</span><strong>已留存</strong></li>`).join(''):'<li><span>昨日交接资料包</span><strong>已留存</strong></li>'}</ul>${state.dayThreeReviewPending?'<div class="loading-line"><i></i><span>招生办公室正在核对昨日材料与本轮申请号…</span></div>':state.dayThreeReviewSubmitted?'<div class="inline-success"><b>接收核对已提交。</b><br>招生办公室将在完成申请号核对后发送本人接收意向，请留意邮箱。</div>':'<div class="form-actions"><button class="primary" data-action="submit-day-three-review">确认材料已留存，提交接收核对</button></div>'}</section></div>`);}
-  function offer(){return shell(`<div class="system-inner offer-page">${crumb('拟接收意向确认')}<div class="offer-heading"><div><p class="campus-kicker">2027级推免接收工作 · RC-0922-071</p><h2 class="page-title">拟接收意向确认</h2><p>经资格复核，本方向拟向你发送接收意向。该页面只确认本轮接收意向，不代表已经办理入学。</p></div><span class="assessment-status">待本人确认</span></div><section class="offer-sheet"><div class="offer-letter-head"><span>衡川大学先进系统研究院</span><b>2027年推荐免试研究生拟接收意向</b><small>文书编号：INT-0924-071 · 2026年9月24日 09:12</small></div><dl class="offer-fields"><div><dt>申请人</dt><dd>陈言</dd></div><div><dt>申请方向</dt><dd>0811 / H03 · 复杂系统与人机交互</dd></div><div><dt>当前状态</dt><dd>拟接收意向，待本人确认</dd></div><div><dt>说明</dt><dd>正式接收及入学手续以后续通知为准。</dd></div></dl><p class="offer-note">请在下方保留你的选择。无论选择继续确认还是暂缓确认，均会保留本页文书与申请回执。</p>${state.offerChoice?`<div class="inline-success">${state.offerChoice==='continue'?'你已选择继续确认本方向接收意向。':'你已选择暂缓确认，并保留本页材料供后续核对。'}<br><span class="small muted">选择记录已保存至本地，尚不改变正式录取结果。</span></div>`:''}<div class="form-actions">${!state.offerChoice?'<button class="primary" data-action="offer-choice" data-choice="continue">继续确认接收意向</button><button class="secondary" data-action="offer-choice" data-choice="hold">暂缓确认，先保留材料</button>':''}<button class="secondary" data-action="route" data-route="allocation">查看接收安排说明</button><button class="text" data-action="save-offer">保存本页副本</button></div></section></div>`);}
+  function offerStatus(){return state.offerChoice==='continue'?'已确认':state.offerChoice==='hold'?'暂缓确认':'待本人确认';}
+  function offer(){return shell(`<div class="system-inner offer-page">${crumb('拟接收意向确认')}<div class="offer-heading"><div><p class="campus-kicker">2027级推免接收工作 · RC-0922-071</p><h2 class="page-title">拟接收意向确认</h2><p>经资格复核，本方向拟向你发送接收意向。该页面只确认本轮接收意向，不代表已经办理入学。</p></div><span class="assessment-status">${offerStatus()}</span></div><section class="offer-sheet"><div class="offer-letter-head"><span>衡川大学先进系统研究院</span><b>2027年推荐免试研究生拟接收意向</b><small>文书编号：INT-0924-071 · 2026年9月24日 09:12</small></div><dl class="offer-fields"><div><dt>申请人</dt><dd>陈言</dd></div><div><dt>申请方向</dt><dd>0811 / H03 · 复杂系统与人机交互</dd></div><div><dt>当前状态</dt><dd>拟接收意向，${offerStatus()}</dd></div><div><dt>说明</dt><dd>正式接收及入学手续以后续通知为准。</dd></div></dl><p class="offer-note">请在下方保留你的选择。无论选择继续确认还是暂缓确认，均会保留本页文书与申请回执。</p>${state.offerChoice?`<div class="inline-success">${state.offerChoice==='continue'?'你已选择继续确认本方向接收意向。':'你已选择暂缓确认，并保留本页材料供后续核对。'}<br><span class="small muted">选择记录已保存至本地，尚不改变正式录取结果。</span></div>`:''}<div class="form-actions">${!state.offerChoice?'<button class="primary" data-action="offer-choice" data-choice="continue">继续确认接收意向</button><button class="secondary" data-action="offer-choice" data-choice="hold">暂缓确认，先保留材料</button>':''}<button class="secondary" data-action="route" data-route="allocation">查看接收安排说明</button><button class="text" data-action="save-offer">保存本页副本</button></div></section></div>`);}
   function allocation(){return shell(`<div class="system-inner allocation-page">${crumb('接收安排说明')}<div class="offer-heading"><div><p class="campus-kicker">接收工作台 · 仅向本人开放</p><h2 class="page-title">后续接收安排说明</h2><p>以下内容是当前申请号关联的预排信息，状态仍为“未执行”。它不代表你已经入学，也不代表任何未来结果不可改变。</p></div><span class="assessment-status">预排</span></div><section class="allocation-card"><div class="allocation-alert"><b>请核对申请号与阶段名称</b><p>这些字段用于安排后续接收与入学办理，不是当前招生页面的公开展示字段。</p></div><table class="data-table"><tbody><tr><th>申请号</th><td>HC2026-0922-071</td></tr><tr><th>分类回执</th><td>C型 · Q-SCN / D-COMP / E-ALIGN</td></tr><tr><th>拟接收方向</th><td>H03 · 复杂系统与人机交互</td></tr><tr><th>入学后培养单元</th><td>H03-4 · 系统反馈与对照</td></tr><tr><th>阶段批次</th><td>R-17 / 2027-A1</td></tr><tr><th>执行状态</th><td><strong>未执行</strong> · 仅作接收安排预排</td></tr><tr><th>关联说明</th><td>阶段名称与已保存的历史培养分组记录采用同一字段格式。</td></tr></tbody></table><p class="small muted">本页不能证明你已经接受任何研究安排；如不继续本方向接收，请先保存本人回执，再通过正式渠道提出停止或核验请求。</p><div class="form-actions"><button class="secondary" data-action="route" data-route="offer">返回拟接收意向</button><button class="text" data-action="save-allocation">保存接收安排副本</button></div></section></div>`);}
   function browserPage(){const route=currentRoute();const pages={home,form:formPage,dashboard,departments,notice,status,result,rank,candidateSummary,questionnaire,assessment,sourceDesk,interviewCompare,oldArchive:oldArchiveV3,followup,forum,profile,dayThreeReview,offer,allocation,ningchuanHome,ningchuanSearch,campusHome,campusSearch,campusArticle,campusService,newsProject,newsMemorial,lzyThread,identityCheck:identityCheckV3,login,blank:()=>'<div class="blank-page">在地址栏输入已获得的网址</div>'};return `<div class="route-frame" data-route="${route}">${(pages[route]||pages.blank)()}</div>`;}
   function browser(){const tab=currentTab();return `<div class="window-tabs">${state.tabs.map((t,i)=>`<div class="browser-tab ${i===state.activeTab?'selected':''}"><button class="text tab-label" data-action="select-tab" data-tab="${i}" style="color:inherit">${escape(routeLabel(t.history[t.index]))}</button>${state.tabs.length>1?`<button class="close-tab" data-action="close-tab" data-tab="${i}" aria-label="关闭标签">×</button>`:''}</div>`).join('')}<button class="new-tab" data-action="new-tab" aria-label="新标签页">＋</button></div><div class="browser-toolbar"><button class="nav-icon" data-action="back" aria-label="后退" ${tab.index===0?'disabled':''}>‹</button><button class="nav-icon" data-action="forward" aria-label="前进" ${tab.index===tab.history.length-1?'disabled':''}>›</button><button class="nav-icon" data-action="refresh" aria-label="刷新">⟳</button><form class="address-box" id="address-form"><span aria-hidden="true">▤</span><input aria-label="浏览器地址栏" id="address" value="${escape(routePath(currentRoute()))}" autocomplete="off" spellcheck="false"></form><button class="nav-icon" data-action="history" aria-label="历史记录" title="历史记录">◷</button></div><div class="browser-content" data-scroll-key="browser:${tab.id}:${tab.index}:${currentRoute()}">${browserPage()}</div>`;}
-  function downloads(){return state.savedFiles.map(item=>({...item,name:item.name.replace(/\.txt$/i,'.pdf'),size:item.size||'留存副本'}));}
+  function downloads(){return state.savedFiles.map(item=>({...item,...(window.DIBU_DOCUMENTS[item.id]||{}),name:item.name.replace(/\.txt$/i,'.pdf'),size:window.DIBU_DOCUMENTS[item.id]?.size||item.size||'留存副本'}));}
   function findFile(id){return [...files.application,...files.july,...files.reference,...taskAttachments,...downloads()].find(f=>f.id===id);}
   function sourceDesk(){
     const sourceRows=[['application','本人提交材料','个人陈述、成绩及排名证明、项目说明'],['july','七月活动材料','营期活动确认回执、往返车票、七月旧笔记'],['notice','当前招生通知','9月22日补充考核通知、提交回执、候补进度'],['public','公开网页资料','学校新闻、项目报道、事故处理说明']];
@@ -489,50 +437,64 @@ S.H.
   }
   const legacyFilesPage=filesPage;
   filesPage=function(){const html=legacyFilesPage();if(canOpenSourceDesk())return html.replace('<span>资料来源核对</span>','<span>来源索引</span>');return html.replace(/<button class="folder-button" data-action="route" data-route="sourceDesk">.*?<\/button>/,'');};
-  function interviewCompare(){
-    const ready=state.fanSecondPacketReceived;
-    const marks=state.fanCompareMarks||{pause:false,reuse:false,attribution:false,neutral:false};
-    return shell(`<div class="system-inner compare-workbench"><div class="breadcrumbs"><span aria-hidden="true">⌂</span><button data-action="app" data-app="files">文件</button><span>»</span><span>访谈对照工作台</span></div><div class="source-desk-head"><div><p class="campus-kicker">9月23日 · 同一访谈的两种版本</p><h2 class="page-title">原始转写 / 整理摘要</h2><p class="small muted">选出三处改变原意的地方。只看摘要不能证明本人同意，原始转写和整理摘要需要并排保存。</p></div><span class="source-status">${state.fanComparisonComplete?'已完成':'待核对'}</span></div>${ready?`<div class="compare-columns"><article><header><b>LZY_2023_FT_06_YS.pdf</b><small>原始转写 · 2023-11-02</small></header><p>“对照任务应该先停下来，把上一次改了哪些地方说清楚。”</p><p>“我不同意继续用，也没有同意让生成结果代表我。”</p><p>“至少这一次，我需要先看到书面说明。”</p></article><article><header><b>LZY_2023_FT_06_ZL.pdf</b><small>工作组整理 · 2023-11-03</small></header><p>“对象已知悉系统输出与本人回答存在差异。”</p><p>“对象愿意继续正常任务及后续对照。”</p><p>“补充确认并入下一轮。”</p></article></div><div class="compare-checks"><label><input type="checkbox" data-compare-mark="pause" ${marks.pause?'checked':''}> “暂停”被整理成“已知悉”</label><label><input type="checkbox" data-compare-mark="reuse" ${marks.reuse?'checked':''}> “不同意再利用”被整理成“愿意继续”</label><label><input type="checkbox" data-compare-mark="attribution" ${marks.attribution?'checked':''}> “需要书面说明”被整理成普通补充确认</label></div><div class="form-actions"><button class="primary" data-action="save-compare-marks">${state.fanComparisonComplete?'已保存对照结果':'保存对照结果'}</button></div>`:'<div class="info-note">还没有收到培养分组和访谈资料。请先在即时通讯中完成编号核对。</div>'}<div class="source-desk-note"><b>对照结论</b><p>整理摘要可以改变记录的可执行状态，但不能替代原始访谈，也不能把生成内容登记为本人原话。</p></div></div>`);
-  }
-  function filesPage(){const folder=['application','july','downloads'].includes(state.folder)?state.folder:'application';const items=folder==='downloads'?downloads():files[folder];const folderName={application:'申请材料',july:'七月夏令营',downloads:'下载与留存'}[folder];const compareReady=state.fanSecondPacketOpened?.['fan-interview-original']&&state.fanSecondPacketOpened?.['fan-interview-summary'];const toolbarLink=folder==='downloads'&&compareReady?'<span class="toolbar-action"><button class="text" data-action="route" data-route="interviewCompare">查看记录对照</button></span>':'';return `<div class="app-content files-layout"><aside class="files-sidebar"><h3>陈言的电脑</h3>${[['application','申请材料'],['july','七月夏令营'],['downloads','下载与留存']].map(([id,label])=>`<button class="folder-button ${folder===id?'active':''}" data-action="files-folder" data-folder="${id}">${icon('folder')}<span>${label}</span></button>`).join('')}<button class="folder-button" data-action="app" data-app="note">${icon('note')}<span>备忘录</span></button></aside><section class="files-main" data-scroll-key="files:${folder}"><div class="files-toolbar">此电脑　›　文档　›　${folderName}${toolbarLink}</div><div class="file-list"><div class="file-table-head"><span>名称</span><span>修改日期</span><span>大小</span></div>${items.length?items.map(file=>`<button class="file-item" data-action="open-file" data-file="${file.id}"><span class="name">${icon('document')}<span>${file.name}${folder==='downloads'&&file.id.startsWith('fan-')?`<small class="file-meta-hint">${file.id==='fan-model-handoff'?'模型交接索引':file.id.includes('interview')?'访谈记录 / 对照材料':file.id==='fan-training-group'?'入学后培养分组':'编号与字段留存'}</small>`:''}</span></span><time>${file.date}</time><span class="size">${file.size}</span></button>`).join(''):'<div class="empty-state">此文件夹为空。<br><span class="small">另存的页面与附件会保存在这里。</span></div>'}</div><div class="file-preview">${items.length} 个项目${folder==='july'?' · 此处为七月已经保存的原始文件。':''}${folder==='downloads'&&state.fanSecondPacketReceived?(compareReady?' · 两份访谈记录均已打开，可继续对照。':' · 先分别打开两份访谈记录。'):''}</div></section></div>`;}
-  // The legacy wrapper above is kept for saved sessions, but the current
-  // files surface uses neutral folders and reveals comparison only after both
-  // interview PDFs have actually been opened.
   filesPage=function(){const folder=['application','july','downloads'].includes(state.folder)?state.folder:'application';const items=folder==='downloads'?downloads():files[folder];const folderName={application:'申请材料',july:'七月夏令营',downloads:'下载与留存'}[folder];const compareReady=state.fanSecondPacketOpened?.['fan-interview-original']&&state.fanSecondPacketOpened?.['fan-interview-summary'];const toolbarLink=folder==='downloads'&&compareReady?'<span class="toolbar-action"><button class="text" data-action="route" data-route="interviewCompare">查看记录对照</button></span>':'';return `<div class="app-content files-layout"><aside class="files-sidebar"><h3>陈言的电脑</h3>${[['application','申请材料'],['july','七月夏令营'],['downloads','下载与留存']].map(([id,label])=>`<button class="folder-button ${folder===id?'active':''}" data-action="files-folder" data-folder="${id}">${icon('folder')}<span>${label}</span></button>`).join('')}<button class="folder-button" data-action="app" data-app="note">${icon('note')}<span>备忘录</span></button></aside><section class="files-main" data-scroll-key="files:${folder}"><div class="files-toolbar">此电脑　›　文档　›　${folderName}${toolbarLink}</div><div class="file-list"><div class="file-table-head"><span>名称</span><span>修改日期</span><span>大小</span></div>${items.length?items.map(file=>`<button class="file-item" data-action="open-file" data-file="${file.id}"><span class="name">${icon('document')}<span>${file.name}${folder==='downloads'&&file.id.startsWith('fan-')?`<small class="file-meta-hint">${file.id==='fan-model-handoff'?'模型交接索引':file.id.includes('interview')?'访谈记录 / 对照材料':file.id==='fan-training-group'?'入学后培养分组':'编号与字段留存'}</small>`:''}</span></span><time>${file.date}</time><span class="size">${file.size}</span></button>`).join(''):'<div class="empty-state">此文件夹为空。<br><span class="small">另存的页面与附件会保存在这里。</span></div>'}</div><div class="file-preview">${items.length} 个项目${folder==='july'?' · 此处为七月已经保存的原始文件。':''}${folder==='downloads'&&state.fanSecondPacketReceived?(compareReady?' · 两份访谈记录均已打开，可继续对照。':' · 先分别打开两份访谈记录。'):''}</div></section></div>`;};
-  interviewCompare=function(){
+
+  const interviewSides={left:'fan-interview-original',right:'fan-interview-summary'};
+  let pendingInterviewSelection=[];
+  if(!state.interviewAnnotations||typeof state.interviewAnnotations!=='object')state.interviewAnnotations={};
+  function interviewCharacters(side){return (window.DIBU_DOCUMENTS[interviewSides[side]]?.textLayer||[]).flatMap(page=>page.chars);}
+  function interviewPhraseMarked(side,phrase,focus=phrase){
+    const chars=interviewCharacters(side),text=chars.map(c=>c.t).join('');
+    let start=text.indexOf(phrase);
+    while(start>=0){
+      const targetStart=start+phrase.indexOf(focus),targetEnd=targetStart+focus.length;
+      let offset=0,covered=true;
+      chars.forEach((char,index)=>{const end=offset+char.t.length;if(end>targetStart&&offset<targetEnd&&!state.interviewAnnotations[side+':'+index])covered=false;offset=end;});
+      if(covered)return true;
+      start=text.indexOf(phrase,start+1);
+    }
+    return false;
+  }
+  function interviewMarksComplete(){
+    return (interviewPhraseMarked('left','对照先停止一下')||interviewPhraseMarked('left','对照暂停'))
+      &&interviewPhraseMarked('left','没说可以用')
+      &&interviewPhraseMarked('left','生成的东西写成我同意')&&interviewPhraseMarked('left','我不同意')
+      &&interviewPhraseMarked('right','愿意继续正常任务及后续对照')
+      &&interviewPhraseMarked('right','历史材料调用已知悉','已知悉')
+      &&interviewPhraseMarked('right','系统输出对照同意后续开展','同意后续开展');
+  }
+  function interviewDocument(side,title){
+    const id=interviewSides[side],entry=window.DIBU_DOCUMENTS[id],zoom=state.interviewZoom?.[side]||100;let index=0;
+    return `<article class="interview-document"><header><div><b>${title}</b><small>${side==='left'?'LZY_2023_FT_06_YS.pdf':'LZY_2023_FT_06_ZL.pdf'}</small></div><a class="text" href="${entry.pdf}" target="_blank" rel="noopener">打开原件 ↗</a></header><div class="reader-zoom"><button class="secondary" data-action="interview-zoom" data-side="${side}" data-delta="-20" aria-label="缩小${title}">−</button><span data-zoom-label="${side}">${zoom}%</span><button class="secondary" data-action="interview-zoom" data-side="${side}" data-delta="20" aria-label="放大${title}">＋</button></div><div class="interview-reader" tabindex="0" data-zoom="${zoom}" data-scroll-key="interview:${side}">${entry.textLayer.map((page,pageIndex)=>`<figure class="interview-pdf-page" style="aspect-ratio:${page.width}/${page.height};width:${zoom}%"><img src="${entry.pages[pageIndex]}" alt="${title}第${pageIndex+1}页" draggable="false"><div class="interview-text-layer" data-side="${side}">${page.chars.map(char=>{const key=side+':'+index++,mark=state.interviewAnnotations[key]||'';return `<span data-char="${key}" class="pdf-letter ${mark?'annotation-'+mark:''}" style="left:${char.x/page.width*100}%;top:${char.y/page.height*100}%;width:${char.w/page.width*100}%;height:${char.h/page.height*100}%;font-size:${char.h/page.width*100}cqw">${escape(char.t)}</span>`;}).join('')}</div></figure>`).join('')}<p class="reader-page-count">${entry.pages.length} / ${entry.pages.length}</p></div></article>`;
+  }
+  function interviewCompare(){
     const ready=state.fanSecondPacketReceived&&state.fanSecondPacketOpened?.['fan-interview-original']&&state.fanSecondPacketOpened?.['fan-interview-summary'];
-    const marks=state.fanCompareMarks||{pause:false,reuse:false,attribution:false,neutral:false};
-    const pairs=[
-      ['pause','“对照任务应该先停下来，把上一次改了哪些地方说清楚。”','“对象已知悉系统输出与本人回答存在差异。”'],
-      ['reuse','“我不同意继续用，也没有同意让生成结果代表我。”','“对象愿意继续正常任务及后续对照。”'],
-      ['attribution','“至少这一次，我需要先看到书面说明。”','“补充确认并入下一轮。”'],
-      ['neutral','“我会先阅读相关文献，再按要求提交说明。”','“对象按安排阅读材料并提交说明。”']
-    ];
-    const html='<div class="system-inner compare-workbench"><div class="breadcrumbs"><span aria-hidden="true">⌂</span><button data-action="app" data-app="files">文件</button><span>»</span><span>记录对照</span></div><div class="source-desk-head"><div><p class="campus-kicker">9月23日 · 两份同源记录</p><h2 class="page-title">访谈记录对照</h2><p class="small muted">把两份 PDF 中意思发生变化的对应段落标记下来。页面不会把你的观察改写成结论。</p></div><span class="source-status">'+(state.fanComparisonComplete?'已保存':'待观察')+'</span></div>'+(ready?'<div class="compare-file-strip"><span><b>LZY_2023_FT_06_YS.pdf</b><small>原始转写 · 2023-11-02</small></span><span><b>LZY_2023_FT_06_ZL.pdf</b><small>整理摘要 · 2023-11-03</small></span></div><div class="difference-pairs">'+pairs.map(([key,left,right],index)=>'<article class="difference-pair '+(marks[key]?'marked':'')+'"><div class="difference-pair-index">记录 '+(index+1)+'</div><div><small>原始转写</small><p>'+left+'</p></div><div><small>整理摘要</small><p>'+right+'</p></div><button class="secondary" data-action="toggle-compare-mark" data-mark="'+key+'">'+(marks[key]?'取消标记':'标记这组')+'</button></article>').join('')+'</div><div class="form-actions"><button class="primary" data-action="save-compare-marks">'+(state.fanComparisonComplete?'已保存观察':'保存我的观察')+'</button></div>':'<div class="info-note">还没有收到培养分组和访谈资料。请先在即时通讯中完成编号核对。</div>')+'<div class="source-desk-note"><b>记录说明</b><p>两份文件都保留在“下载与留存”。先读完原始 PDF，再决定哪些段落值得回看；保存观察后，范既白会继续说明编号和时间。</p></div></div>';
-    return shell(html);
-  };
-  interviewCompare=function(){
-    const ready=state.fanSecondPacketReceived&&state.fanSecondPacketOpened?.['fan-interview-original']&&state.fanSecondPacketOpened?.['fan-interview-summary'];
-    const marks=state.fanMarkedFragments||{};
-    const fragments=[
-      ['pause','“对照任务应该先停下来，把上一次改了哪些地方说清楚。”','“对象已知悉系统输出与本人回答存在差异。”'],
-      ['reuse','“我不同意继续用，也没有同意让生成结果代表我。”','“对象愿意继续正常任务及后续对照。”'],
-      ['attribution','“至少这一次，我需要先看到书面说明。”','“补充确认并入下一轮。”'],
-      ['neutral','“我会先阅读相关文献，再按要求提交说明。”','“对象按安排阅读材料并提交说明。”']
-    ];
-    const required=['pause:left','pause:right','reuse:left','reuse:right','attribution:left','attribution:right'];
-    const selected=state.interviewSelectedFragment||'';
-    const canSave=required.every(key=>marks[key])&&!marks['neutral:left']&&!marks['neutral:right'];
-    const fragmentButton=(group,side,text)=>{
-      const id=group+':'+side,style=marks[id]||'',isSelected=selected===id;
-      const cls='interview-fragment '+(style?'marked-'+style:'')+(isSelected?' selected':'');
-      const label=style==='highlight'?'已高光':style==='bold'?'已加粗':isSelected?'已选中':'点击选择';
-      return '<button class="'+cls+'" data-action="select-interview-fragment" data-fragment="'+id+'"><span>'+escape(text)+'</span><small>'+label+'</small></button>';
-    };
-    const documentColumn=(side,title,file,date)=>'<article class="interview-document"><header><b>'+title+'</b><small>'+file+' · '+date+'</small></header><div class="interview-document-body">'+fragments.map(row=>'<div class="interview-line"><span class="interview-line-no">'+(fragments.indexOf(row)+1).toString().padStart(2,'0')+'</span>'+fragmentButton(row[0],side,row[side==='left'?1:2])+'</div>').join('')+'</div></article>';
-    const html='<div class="system-inner compare-workbench"><div class="breadcrumbs"><span aria-hidden="true">⌂</span><button data-action="app" data-app="files">文件</button><span>»</span><span>访谈记录对照</span></div><div class="source-desk-head"><div><p class="campus-kicker">9月23日 · 两份同源记录</p><h2 class="page-title">访谈记录对照</h2><p class="small muted">左右两份文件按原顺序排列。点击一句文本后，用下方工具标记你认为发生变化的句子。</p></div><span class="source-status">'+(state.fanComparisonComplete?'已保存观察':'待标记')+'</span></div>'+(ready?'<div class="interview-compare-toolbar"><span>先选择文本，再选择标记方式；高光和加粗都可以使用。</span><button class="secondary" data-action="apply-interview-mark" data-style="highlight"'+(selected?'':' disabled')+'>高光</button><button class="secondary" data-action="apply-interview-mark" data-style="bold"'+(selected?'':' disabled')+'>加粗</button><button class="text" data-action="apply-interview-mark" data-style="clear"'+(selected?'':' disabled')+'>清除标记</button></div><div class="interview-file-grid">'+documentColumn('left','原始转写','LZY_2023_FT_06_YS.pdf','2023-11-02')+documentColumn('right','整理摘要','LZY_2023_FT_06_ZL.pdf','2023-11-03')+'</div><div class="compare-save-row"><span>'+(canSave?'关键段落已全部标记，可以保存观察。':'请继续检查两份文件中的对应段落。')+'</span><button class="primary" data-action="save-compare-marks"'+(canSave&&!state.fanComparisonComplete?'':' disabled')+'>'+(state.fanComparisonComplete?'已保存观察':'保存观察')+'</button></div>'+(state.fanComparisonComplete?'<div class="compare-followup"><p>范既白已经根据你的标记补发了模型交接索引和后续说明。</p><button class="secondary" data-action="app" data-app="chat">返回范既白聊天</button></div>':''):'<div class="info-note">还没有收到培养分组和访谈资料。请先在即时通讯中完成编号核对。</div>')+'<div class="source-desk-note"><b>记录说明</b><p>标记只保存在本地，不会改写 PDF 原件。请结合上下文判断原意是否发生变化；选中已标记的文字可以清除标记。</p></div></div>';
-    return shell(html);
-  };
+    return `<section class="compare-viewer"><div class="system-inner compare-workbench"><div class="breadcrumbs"><button data-action="app" data-app="files">文件</button><span>»</span><span>访谈记录对照</span></div><div class="source-desk-head"><div><h2 class="page-title">访谈记录对照</h2><p class="small muted">选中原件中的文字，添加批注；两侧文件可分别滚动。</p></div><span class="source-status">${state.fanComparisonComplete?'已保存观察':'未保存'}</span></div>${ready?`<div class="interview-compare-toolbar"><span id="interview-selection-status">拖动选择文字后，可以高光、加粗或清除标记。</span><button class="secondary" data-action="apply-interview-mark" data-style="highlight" disabled>高光</button><button class="secondary" data-action="apply-interview-mark" data-style="bold" disabled>加粗</button><button class="secondary" data-action="apply-interview-mark" data-style="clear" disabled>清除</button></div><div class="interview-file-grid">${interviewDocument('left','原始转写')}${interviewDocument('right','整理摘要')}</div><div class="compare-save-row"><span>批注会随本次阅读自动保留。</span><button class="primary" data-action="save-compare-marks" ${!interviewMarksComplete()||state.fanComparisonComplete?'disabled':''}>${state.fanComparisonComplete?'已保存观察':'保存观察'}</button></div>${state.fanComparisonComplete?'<div class="compare-followup"><p>观察已保存。</p><button class="secondary" data-action="app" data-app="chat">查看范既白的回复</button></div>':''}`:'<div class="info-note">请先收到并打开两份访谈记录。</div>'}</div></section>`;
+  }
+  function captureInterviewSelection(){
+    const selection=window.getSelection();pendingInterviewSelection=[];
+    document.querySelectorAll('[data-action="apply-interview-mark"]').forEach(button=>button.disabled=true);
+    if(!selection||selection.isCollapsed||!selection.rangeCount)return;
+    const range=selection.getRangeAt(0);
+    const start=range.startContainer.parentElement?.closest('.interview-text-layer');
+    const end=range.endContainer.parentElement?.closest('.interview-text-layer');
+    if(!start||start!==end)return;
+    for(const el of start.querySelectorAll('[data-char]'))if(range.intersectsNode(el.firstChild))pendingInterviewSelection.push(el.dataset.char);
+    const valid=pendingInterviewSelection.length>0&&pendingInterviewSelection.length<=160;
+    document.querySelectorAll('[data-action="apply-interview-mark"]').forEach(button=>button.disabled=!valid);
+    const status=$('#interview-selection-status');if(status)status.textContent=valid?'已选择文字，可添加批注。':pendingInterviewSelection.length>160?'请分段选取需要批注的文字。':'拖动选择文字后，可以添加批注。';
+    if(!valid)pendingInterviewSelection=[];
+  }
+  document.addEventListener('pointerup',event=>{if(event.target.closest('.interview-text-layer'))setTimeout(captureInterviewSelection,0);});
+  document.addEventListener('keyup',event=>{if(event.target.closest('.interview-reader'))captureInterviewSelection();});
+  document.addEventListener('pointerdown',event=>{if(event.target.closest('[data-action="apply-interview-mark"]'))event.preventDefault();});
+  function finishInterviewFollowup(){
+    if(!state.interviewReplyPending)return;
+    state.interviewReplyPending=false;state.fanTyping=false;
+    state.fanMessages.push({side:'other',text:'我看到了你的批注。他说课程继续，同时要求暂停对照，也拒绝历史材料再利用和生成结果代替本人回答。摘要把这些不同意写成了已知悉和同意后续开展。'});
+    state.fanMessages.push({side:'other',text:'这份摘要的流转页是我经手的。目录还引用过 MX-24-014，最后一页模型交接索引也发你了；它只能核对这一条主体链和时间。'});
+    receiveFanModelIndex();save();render();toast('范既白发来了回复和模型交接索引。');
+  }
   const mails={
     invitation:{sender:'先进系统研究院招生办公室',address:'admission@hcu.example',time:'2026年9月22日 08:06',subject:'关于 2027 年研究生招生补充材料确认的通知',body:()=>'<p>陈言同学：</p><p>您好。部分接收安排尚未确定，符合条件的申请人可以补交材料，继续等待递补机会。</p><p>请核对已登记的个人陈述版本，并补交一份项目说明。七月通知、行程和已整理材料均保留在本人电脑中。</p><button class="primary" data-action="route" data-route="form">进入申请人工作台</button><p class="small muted">https://admission.hcu.example/2027<br>本封邮件已于进入页面前阅读。</p><p>衡川大学先进系统研究院<br>招生办公室</p>'},
         submitted:{sender:'研究生报考服务系统',address:'service@xspt.hcu.example',time:'2026年9月22日 09:20',subject:'材料补充回执、问卷及方向接收进度',body:()=>'<p>陈言同学：</p><p>本轮补充材料已收到，回执编号 RC-0922-071。</p><p>请完成“申请人情况与学习习惯问卷”，并自行查看本方向的接收进度。两项地址仅向本轮申请人开放。</p><div class="form-actions"><button class="primary" data-action="route" data-route="questionnaire">进入问卷</button><button class="secondary" data-action="route" data-route="rank">查看方向接收进度</button></div><p class="small muted">问卷：https://admission.hcu.example/2026/questionnaire<br>进度：https://xspt.hcu.example/sstm/tm/progress</p><p>本页为方向接收进度，最终结果以正式审核通知为准。</p>'},
@@ -616,7 +578,7 @@ S.H.
     const transcriptLabel=file.id==='fan-interview-original'?'🎙 查看语音转文字（可选择复制）':'查看可选择文字';
     return `<div class="pdf-toolbar"><span>${entry.tickets?'车票图片 · 往返两张':`PDF · ${entry.pages.length} 页`} · ${entry.size}</span><div><button class="secondary" data-action="zoom-document">放大阅读</button><a class="secondary" href="${entry.pdf}" target="_blank" rel="noopener">打开 PDF</a><a class="primary" href="${entry.pdf}" download="${escape(file.name)}">下载 PDF</a></div></div><div class="pdf-pages ${entry.tickets?'ticket-pages':''}" tabindex="0" data-scroll-key="pdf:${file.id}" aria-label="${escape(file.name)}页面预览">${images.map((src,i)=>`<figure><img src="${src}" alt="${escape(file.name)}${entry.tickets?(i===0?'去程车票':'返程车票'):`第${i+1}页`}" ${i?'loading="lazy"':''}><figcaption>${entry.tickets?(i===0?'去程 · 2026年7月11日':'返程 · 2026年7月13日'):`第 ${i+1} 页 / 共 ${images.length} 页`}</figcaption></figure>`).join('')}</div><details class="pdf-text"><summary>${transcriptLabel}</summary><pre>${emphasizedDocumentText(entry.text)}</pre></details>${compact?'':`<div class="doc-meta">本地文件 · ${escape(file.date)}${file.id==='july-note'?' · 七月原始留存，只读':''} · 可按需展开文字版本</div>`}`;
   }
-  async function showFile(id,supplied){const file=supplied||findFile(id);if(!file)return;
+  async function showFile(id,supplied){const saved=supplied||findFile(id);if(!saved)return;const file={...saved,...(window.DIBU_DOCUMENTS[id]||{})};
     if(file.photo){modal(`<h2>${escape(file.name)}</h2><div class="pdf-toolbar"><span>JPEG · ${file.width} × ${file.height} · ${escape(file.size)}</span><div><a class="secondary" href="${escape(file.image)}" target="_blank" rel="noopener">查看原图</a><a class="primary" href="${escape(file.image)}" download="${escape(file.name)}">下载照片</a></div></div><figure class="camp-photo-view"><img src="${escape(file.image)}" width="${file.width}" height="${file.height}" alt="七月报到当天拍摄的研究院北楼，树木与广场后的教学科研楼"><figcaption><span>先进系统研究院 · 北楼</span><time>2026.07.11 09:32</time></figcaption></figure><pre class="photo-note">${escape(file.text)}</pre>`,'document-dialog photo-dialog',file.name);return;}
     modal(`<h2>${escape(file.name)}</h2><div id="document-body" data-document-id="${escape(id)}"><p class="document-loading">正在打开文档……</p></div>`,'document-dialog pdf-dialog',file.name);
     try{const entry=file.pdf?file:await window.DibuPDF.fromText(file);const body=$('#document-body');
@@ -690,7 +652,7 @@ S.H.
     }
     if(stage===3){
       if(!state.fanComparisonPrompted&&hasChatKeyword(message,chatKeywordNodes.fanCompareOpen.keywords)){
-        delayedFanReplies('chat',['这两页记的是同一次访谈，但整理摘要改变了原话的边界。你再看一下他说“停止”或“不同意”的那一段。'],()=>{state.fanComparisonPrompted=true;});return;
+        delayedFanReplies('chat',['这两页记的是同一次访谈。请按上下文核对两份原件，在对照页保留你的批注，我再核对当时经手的流转记录。'],()=>{state.fanComparisonPrompted=true;});return;
       }
       if(state.fanComparisonPrompted&&hasChatKeyword(message,chatKeywordNodes.fanCompareFinish.keywords)){
         delayedFanReplies('chat',['先把两份 PDF 并排读完，并在记录对照页里手动标记你认为改变原意的段落。','聊天里的判断不会替代原始文件对照；标记齐全后点击“保存观察”，我再继续说明编号和时间。']);
@@ -719,7 +681,7 @@ S.H.
       fanAdded:false,activeChat:'zhao',fanMessages:[],fanTyping:false,fanQuestionStage:0,fanFirstPacketReceived:false,
       fanSubjectMapSaved:false,fanClassificationSaved:false,fanCodesVerified:false,fanCodeAttempts:0,
       fanCodeDraft:{material:'',subject:'',display:''},fanSecondPacketReceived:false,fanSecondPacketOpened:{},
-      fanComparisonPrompted:false,fanComparisonComplete:false,fanModelIndexReceived:false,fanModelIndexOpened:false,fanResponsibilityChecked:false,fanCompareMarks:{pause:false,reuse:false,attribution:false,neutral:false},fanMarkedFragments:{},interviewSelectedFragment:'',
+      interviewReplyPending:false,interviewAnnotations:{},fanComparisonPrompted:false,fanComparisonComplete:false,fanModelIndexReceived:false,fanModelIndexOpened:false,fanResponsibilityChecked:false,fanCompareMarks:{pause:false,reuse:false,attribution:false,neutral:false},fanMarkedFragments:{},interviewSelectedFragment:'',
       dayTwoChecklist:{archive:false,contact:false,packet:false,link:false,compare:false,model:false,responsibility:false},dayTwoReadyNotified:false,
       dayThreeChecklist:{review:false,offer:false,allocation:false,copy:false},dayThreeReviewSubmitted:false,dayThreeReviewPending:false,dayThreeOfferReleased:false,offerChoice:'',allocationOpened:false
     });
@@ -750,8 +712,23 @@ S.H.
     'mark-version-review'(){const marks=state.versionMarks||{};if(marks.neutral){toast('有一行前后意思一致，请再检查标记。');return;}if(!marks.one||!marks.two||!marks.three){toast('请先标记你认为需要二次核对的对应记录。');return;}state.versionReviewChoice='待核实';state.dayOneChecklist.version=true;save();render();toast('你的观察已保存，后续核对仍以原始文件为准。');},
     'mark-candidate-review'(){state.dayOneChecklist.candidates=true;save();render();toast('候补流程横向对照已保存。');},
     'select-interview-fragment'(el){state.interviewSelectedFragment=el.dataset.fragment||'';save();render();},
-    'apply-interview-mark'(el){const id=state.interviewSelectedFragment;if(!id)return;if(!state.fanMarkedFragments)state.fanMarkedFragments={};if(el.dataset.style==='clear')delete state.fanMarkedFragments[id];else state.fanMarkedFragments[id]=el.dataset.style;save();render();},
-    'save-compare-marks'(){if(state.fanComparisonComplete){toast('这份观察已经保存。');return;}const marks=state.fanMarkedFragments||{},required=['pause:left','pause:right','reuse:left','reuse:right','attribution:left','attribution:right'];if(!required.every(key=>marks[key])||marks['neutral:left']||marks['neutral:right']){toast('请继续核对两份文件，检查是否遗漏或误标。');return;}state.fanComparisonComplete=true;state.dayTwoChecklist.compare=true;state.fanQuestionStage=4;state.activeChat='fan';state.fanMessages.push({side:'other',text:'你标出的三处都对应到了原始记录中的限制语句。摘要里的措辞确实改变了原话的边界。'});state.fanMessages.push({side:'other',text:'我经手的目录还引用过 MX-24-014。最后一页模型交接索引也发你了；它只能核对这一条主体链和时间。'});receiveFanModelIndex();state.interviewSelectedFragment='';save();render();toast('观察已保存，范既白发来了后续说明。');},
+    'interview-zoom'(el){
+      const reader=el.closest('.interview-document').querySelector('.interview-reader'),page=reader.querySelector('.interview-pdf-page');
+      const zoom=Math.max(100,Math.min(200,Number(reader.dataset.zoom||100)+Number(el.dataset.delta)));
+      state.interviewZoom={...state.interviewZoom,[el.dataset.side]:zoom};save();reader.dataset.zoom=zoom;reader.querySelectorAll('.interview-pdf-page').forEach(p=>p.style.width=zoom+'%');el.closest('.interview-document').querySelector('[data-zoom-label]').textContent=zoom+'%';
+    },
+    'apply-interview-mark'(el){
+      if(!pendingInterviewSelection.length||state.fanComparisonComplete)return;
+      for(const key of pendingInterviewSelection){if(el.dataset.style==='clear')delete state.interviewAnnotations[key];else state.interviewAnnotations[key]=el.dataset.style;}
+      save();window.getSelection()?.removeAllRanges();pendingInterviewSelection=[];render();
+    },
+    'save-compare-marks'(){
+      if(state.fanComparisonComplete||!interviewMarksComplete())return;
+      state.fanComparisonComplete=true;state.dayTwoChecklist.compare=true;state.fanQuestionStage=4;state.activeChat='fan';
+      state.fanMessages.push({side:'mine',text:'两份访谈的批注已保存。原始转写和流转摘要的意思没有对应上，请你核对一下。'});
+      state.fanTyping=true;state.interviewReplyPending=true;save();render();
+      setTimeout(finishInterviewFollowup,1400);
+    },
     'open-file'(el){markInvestigationFileOpened(el.dataset.file);render();showFile(el.dataset.file);},
     'open-assessment-file'(){state.oldAttachmentOpened=true;save();render();showFile('old-project-example');},
     'save-assessment-file'(){saveTaskAttachment();render();},
@@ -770,9 +747,9 @@ S.H.
     'fan-archive-followup'(){if(state.fanArchiveTyping||state.fanArchiveStage!==1)return;state.fanArchiveMessages.push({side:'mine',text:'当前显示编号和真实主体编号有什么区别？'});state.fanArchiveTyping=true;save();render();setTimeout(()=>{['这两个号能指向同一批材料，但用法不同。当前网页上的编号，可能又是第三层。','这里不适合传我手里的页。你愿意的话，加我通讯账号，我只发自己经手过的脱敏件。'].forEach(text=>state.fanArchiveMessages.push({side:'other',text}));state.fanArchiveTyping=false;state.fanArchiveStage=2;state.fanContactOffered=true;save();render();},950);},
     'add-fan'(){state.fanAdded=true;state.activeChat='fan';state.dayTwoChecklist.contact=true;save();render();toast('已添加范既白。请在即时通讯中由本人先发消息。');},
     'fan-responsibility'(){if(state.fanTyping||!state.fanModelIndexOpened||state.fanResponsibilityChecked)return;state.fanMessages.push({side:'mine',text:'我想核对三件事：谁整理了这份访谈，谁收到过异常提醒，以及为什么没有把原始页一起转出？'});state.fanTyping=true;save();render();setTimeout(()=>{['整理摘要由我复核后转给项目组，但我没有把原始页一起转出。','我在2023年末收到过状态异常提醒，先等项目组回话，没有直接联系外部机构。','我只能确认自己经手的目录、引用号和延后求助，不能替你补出完整上层名单。','如果你要继续查，记下 E01-HC014；它是异常上报批次，不代表我看过全部下行回复。'].forEach(text=>state.fanMessages.push({side:'other',text}));state.fanResponsibilityChecked=true;state.dayTwoChecklist.responsibility=true;state.fanTyping=false;save();render();},1100);},
-    'offer-choice'(el){if(state.day<3)return;state.offerChoice=el.dataset.choice==='continue'?'continue':'hold';save();render();toast(state.offerChoice==='continue'?'已保存继续确认接收意向。':'已保存暂缓确认的选择。');},
+    'offer-choice'(el){if(state.day<3)return;state.offerChoice=el.dataset.choice==='continue'?'continue':'hold';const copy=state.savedFiles.find(f=>f.id==='offer-copy');if(copy){copy.text=copy.text.replace(/当前状态：[^\n]*/, '当前状态：拟接收意向，'+offerStatus()).replace(/本人选择：[^\n]*/, '本人选择：'+(state.offerChoice==='continue'?'继续确认接收意向':'暂缓确认，先保留材料'));}save();render();toast(state.offerChoice==='continue'?'已保存继续确认接收意向。':'已保存暂缓确认的选择。');},
     'submit-day-three-review'(){if(state.day<3||state.dayThreeReviewPending||state.dayThreeReviewSubmitted)return;state.dayThreeReviewPending=true;save();render();setTimeout(()=>{state.dayThreeReviewPending=false;state.dayThreeReviewSubmitted=true;state.dayThreeOfferReleased=true;state.dayThreeChecklist.review=true;deliverMail('offer');save();render();toast('接收核对完成，邮箱收到新的接收意向通知。');},1400);},
-    'save-offer'(){if(state.day<3)return;saveCopy('offer-copy','拟接收意向_INT-0924-071.txt','2027年推荐免试研究生拟接收意向\n文书编号：INT-0924-071\n取得时间：2026年9月24日 09:12\n\n申请人：陈言\n申请号：HC2026-0922-071\n申请方向：0811 / H03 · 复杂系统与人机交互\n当前状态：拟接收意向，待本人确认\n本人选择：'+(state.offerChoice==='continue'?'继续确认接收意向':state.offerChoice==='hold'?'暂缓确认，先保留材料':'尚未选择')+'\n\n正式接收及入学手续以后续通知为准。');const copy=state.savedFiles.find(file=>file.id==='offer-copy');if(copy)copy.date='2026/09/24 09:12';state.dayThreeChecklist.copy=true;save();render();},
+    'save-offer'(){if(state.day<3)return;saveCopy('offer-copy','拟接收意向_INT-0924-071.txt','2027年推荐免试研究生拟接收意向\n文书编号：INT-0924-071\n取得时间：2026年9月24日 09:12\n\n申请人：陈言\n申请号：HC2026-0922-071\n申请方向：0811 / H03 · 复杂系统与人机交互\n当前状态：拟接收意向，'+offerStatus()+'\n本人选择：'+(state.offerChoice==='continue'?'继续确认接收意向':state.offerChoice==='hold'?'暂缓确认，先保留材料':'尚未选择')+'\n\n正式接收及入学手续以后续通知为准。');const copy=state.savedFiles.find(file=>file.id==='offer-copy');if(copy)copy.date='2026/09/24 09:12';state.dayThreeChecklist.copy=true;save();render();},
     'save-allocation'(){if(state.day<3)return;saveCopy('allocation-copy','接收安排说明_INT-0924-071.txt','后续接收安排说明\n取得时间：2026年9月24日 09:12\n\n申请号：HC2026-0922-071\n分类回执：C型 · Q-SCN / D-COMP / E-ALIGN\n拟接收方向：H03 · 复杂系统与人机交互\n入学后培养单元：H03-4 · 系统反馈与对照\n阶段批次：R-17 / 2027-A1\n执行状态：未执行 · 仅作接收安排预排\n\n本页不能证明已经入学或接受任何研究安排。');const copy=state.savedFiles.find(file=>file.id==='allocation-copy');if(copy)copy.date='2026/09/24 09:12';state.dayThreeChecklist.copy=true;save();render();},
     picker,
     'zoom-document'(el){const pages=el.closest('.pdf-toolbar').nextElementSibling;pages.classList.toggle('zoomed');el.textContent=pages.classList.contains('zoomed')?'适应窗口':'放大阅读';},
@@ -838,5 +815,6 @@ S.H.
   document.addEventListener('submit',event=>{if(event.target.hasAttribute('data-zhao-chat')){event.preventDefault();const input=event.target.querySelector('[data-zhao-message]');const message=(input?.value||'').trim();if(!message){toast('输入任意一句话即可发起核对。');return;}if(state.zhaoTyping)return;state.zhaoMessages.push({side:'mine',text:message});state.zhaoConversationStarted=true;state.zhaoTyping=true;save();render();setTimeout(()=>{state.zhaoMessages.push({side:'other',text:'我在。先只核对日期和文件名，不传完整材料；这样至少不会把彼此的申请信息留在交流区。'});state.zhaoTyping=false;save();render();},950);return;}if(event.target.hasAttribute('data-fan-chat')){return;}if(event.target.hasAttribute('data-campus-access')){event.preventDefault();actions['campus-access']();return;}if(event.target.hasAttribute('data-ncut-form')||event.target.hasAttribute('data-campus-form')){event.preventDefault();const query=(event.target.querySelector('[data-campus-search],[data-ncut-search]')?.value||'').trim();state.campusQuery=query;if(state.campusKey==='ningchuan')state.ncutQuery=query;save();go('campusSearch');return;}if(event.target.id!=='address-form')return;event.preventDefault();const value=$('#address').value.trim().replace(/\/$/,'');const campusMatch=Object.entries(campuses).find(([,c])=>value===c.name||value.includes(c.domain));if(campusMatch){state.campusKey=campusMatch[0];state.campusQuery='';if(campusMatch[0]==='ningchuan')state.ncutQuery='';save();go('campusHome');return;}const route=Object.entries(paths).find(([,path])=>path&&path.replace(/\/$/,'')===value);if(route){if(['rank','questionnaire'].includes(route[0])&&!state.submitted){toast('请先完成本人材料补充。');return;}go(route[0]);}else{toast('未找到该地址，请核对已经获得的完整网址。');}});
   document.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&event.target.matches('[data-fan-message],[data-fan-archive-message]')){event.preventDefault();event.target.closest('form')?.requestSubmit();return;}if(event.key==='Escape'&&$('#dialog-root').innerHTML)closeDialog();if(event.key==='Tab'&&$('#dialog-root').innerHTML){const focusable=[...$('#dialog-root').querySelectorAll('button:not([disabled]),input,select,textarea,a[href]')];const first=focusable[0],last=focusable.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}});
   if(fanPreview)save();
+  if(state.interviewReplyPending)finishInterviewFollowup();
   render();
 })();
