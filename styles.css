@@ -79,7 +79,7 @@
 .pdf-letter{position:absolute;display:block;white-space:pre;line-height:1;font-family:SimSun,serif;color:transparent;user-select:text;-webkit-user-select:text}
 .pdf-letter::selection{background:#6fafff88;color:transparent}
 .pdf-letter.annotation-highlight{background:#ffe45970;box-shadow:0 1px 0 #efc63480}
-.pdf-letter.annotation-bold{color:#172c38;font-weight:900;text-shadow:.3px 0 currentColor,-.3px 0 currentColor}
+
 .reader-page-count{text-align:center;color:#697984;font-size:11px;margin:10px 0}
 .reader-zoom{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:7px 12px;background:#f4f6f8;border-bottom:1px solid #dce5ea;font-size:11px;color:#647786}
 .reader-zoom button{min-width:30px;min-height:28px;padding:2px 8px}
@@ -136,3 +136,35 @@
 .closure-last-chat{max-width:920px;padding:30px;margin:25px auto;background:#f2f5f4;border:1px solid #d6e0da;color:#30483e}.closure-last-chat h1{font-size:23px}.closure-last-chat header small{font-size:12px;color:#84968b}.closure-last-chat header p{font-size:12px;line-height:1.8;color:#7c8f84}.closure-chat-messages{min-height:180px;max-height:330px;overflow:auto;padding:18px;background:#e8eee9}.closure-chat-messages p{max-width:80%;padding:14px 18px;line-height:1.95;font-size:13px;background:#fff;border:1px solid #dce3dd;border-radius:5px;margin:14px 0;white-space:pre-wrap;overflow-wrap:anywhere}.closure-chat-messages p.mine{margin-left:auto;background:#d5e8d6}.closure-last-chat form{display:flex;align-items:flex-end;gap:15px;margin:20px 0}.closure-last-chat textarea{width:100%;min-height:85px;resize:vertical;padding:13px;border:1px solid #b8c6bb;font:inherit;font-size:13px}.closure-last-chat form button{min-width:95px;min-height:44px}.system-footer .text{font-size:11px;line-height:1.9;margin-left:12px}
 @media(max-width:850px){.closure-home-grid{grid-template-columns:1fr}.closure-agency>main{padding:22px}.closure-agency h1{font-size:21px}.closure-form-grid{grid-template-columns:1fr 1fr}.closure-decision-options{grid-template-columns:1fr}.closure-ending>section{padding:28px}.closure-unit-list{grid-template-columns:1fr}.closure-news time{display:none}}
 @media(max-width:600px){.closure-attachment-grid,.closure-form-grid{grid-template-columns:1fr}.closure-agency>header{gap:13px;padding:20px}.closure-agency h1{font-size:18px}.closure-agency>nav button{padding:12px}.closure-article{padding:22px}.closure-heading{flex-direction:column}.closure-search,.closure-directory form{flex-direction:column}.closure-last-chat{margin:16px;padding:20px}.closure-ending{padding:25px 15px}.closure-ending h1{font-size:27px}.closure-track li{padding:12px 8px}}
+
+/* October 9: full-width interview sheets and stable scroll containers. */
+.compare-viewer .interview-file-grid{grid-template-columns:minmax(0,1fr);gap:28px;max-width:1050px;margin-inline:auto}
+.compare-viewer .interview-reader{height:auto;max-height:none;overflow:auto;padding:20px;overscroll-behavior:auto}
+.compare-viewer .interview-document{width:100%}
+.compare-viewer .interview-compare-toolbar{top:0}
+.compare-save-row{position:sticky;bottom:0;z-index:6;box-shadow:0 -4px 16px #263d4910}
+.chat-conversation{min-width:0;min-height:0}
+.chat-conversation .chat-followups{max-height:35vh;overflow:auto;flex-shrink:0}
+[data-scroll-key]{scroll-behavior:auto!important;overflow-anchor:none}
+.interview-feedback-dialog{width:min(440px,100%)}
+.roster-inquiry p{margin:0;line-height:1.8}
+@media(max-width:560px){.compare-viewer .interview-reader{height:auto;padding:8px}.compare-save-row{gap:8px;padding:10px}.compare-save-row button{width:auto}.compare-viewer .interview-file-grid{gap:18px}}
+
+/* Handwritten roster inquiry; local draft is retained until explicit submission. */
+.dialog.roster-complaint-dialog{width:min(880px,calc(100vw - 32px));max-width:880px;padding:32px;box-sizing:border-box}
+.roster-complaint-form{color:#43566b;font-size:14px;line-height:1.65;min-width:0}
+.roster-complaint-form header{padding-right:26px}.roster-complaint-form h2{font-size:25px;margin:7px 0 12px;line-height:1.4}
+.roster-complaint-form header>p:last-child{color:#7d8a97;font-size:13px;margin:0 0 20px}
+.roster-form-kicker{color:#8a98a4;font-size:11px;letter-spacing:1px;margin:0}
+.roster-complaint-form fieldset{min-width:0;border:1px solid #dde5ec;border-radius:5px;padding:17px 20px 13px;margin:0 0 20px}
+.roster-complaint-form legend{padding:0 8px;font-size:13px;color:#64788a}
+.roster-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 22px}
+.roster-field{display:flex;flex-direction:column;gap:7px;min-width:0}.roster-field>span:first-child{font-size:13px}.roster-field i{color:#bc736a;font-style:normal}
+.roster-field input,.roster-field textarea{box-sizing:border-box;width:100%;min-width:0;border:1px solid #cbd6df;border-radius:4px;padding:10px 12px;background:#fff;color:#364d60;font:inherit;line-height:1.55}
+.roster-field input{height:43px}.roster-field textarea{resize:vertical;min-height:108px}
+.roster-field input:focus,.roster-field textarea:focus{outline:2px solid #20a1cd44;outline-offset:1px;border-color:#299dc2}
+.roster-field [aria-invalid=true]{border-color:#c47c73}.roster-field small{font-size:11px;color:#a3574e;line-height:1.5;min-height:17px;overflow-wrap:anywhere}
+.roster-reason{margin-bottom:15px}.roster-guide{font-size:11px;color:#8d99a5}
+.roster-submit-panel{position:sticky;bottom:-32px;background:#fff;padding:12px 0 3px;border-top:1px solid #e2e8ed;z-index:2}.roster-submit-panel>p{margin:0 0 11px;font-size:12px;color:#8c9299}.roster-submit-panel>p.is-ready{color:#468368}
+.roster-complaint-form .dialog-actions{margin:0;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.roster-complaint-form .dialog-actions button{min-width:118px;min-height:42px;padding:10px 15px;font-size:13px;line-height:1.5}.roster-complaint-form button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:600px){.dialog.roster-complaint-dialog{padding:24px 18px}.roster-field-grid{grid-template-columns:minmax(0,1fr);gap:8px}.roster-complaint-form fieldset{padding:13px}.roster-complaint-form h2{font-size:22px}.roster-submit-panel{bottom:-24px}.roster-complaint-form .dialog-actions button{flex:1;min-width:100px}}
